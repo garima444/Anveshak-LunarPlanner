@@ -1,0 +1,48 @@
+============================================================
+=== CHANDRAYAAN-3 VALIDATION REPORT ===
+============================================================
+Site:     Chandrayaan-3 Statio Shiv Shakti
+Actual:   -69.373°S, 32.319°E
+Dataset:  80–90°S  |  C3 is (OUT OF COVERAGE)
+
+--- Profile A: geological/rtg/slope≤20/priority=0.6 ---
+  Nearest top site:   Rank 2 | lat=-86.493°, lon=13.339° | dist=526.0 km
+  Score at C3 pixel: safety=OOB / mission=OOB / final=OOB
+  Terrain class:     OUT_OF_COVERAGE
+  Validation:        COVERAGE_BOUNDARY_WEAK
+
+--- Profile B: water_ice/rtg/slope≤15/priority=0.4 ---
+  Nearest top site:   Rank 8 | lat=-88.418°, lon=47.027° | dist=579.2 km
+  Score at C3 pixel: safety=OOB / mission=OOB / final=OOB
+  Terrain class:     OUT_OF_COVERAGE
+  Validation:        COVERAGE_BOUNDARY_WEAK
+
+--- Summary ---
+  Coverage note: C3 pixel (-3840, 10701) is OUTSIDE dataset coverage (80–90°S). Chandrayaan-3 at -69.373°S is in the sub-polar zone, outside the extreme polar DEM.
+  Overall verdict: COVERAGE_BOUNDARY_WEAK
+============================================================
+
+Science context:
+  Our system targets 80–90°S (extreme polar region) where PSR
+  and water-ice probability are highest. Chandrayaan-3 targeted
+  the sub-polar zone (~70°S) as a technological demonstration —
+  a deliberate choice, not the scientifically optimal ice site.
+  The distance from C3 to our nearest recommended site quantifies
+  the difference between these two mission objectives.
+
+============================================================
+=== ARTEMIS III CANDIDATE SITES ===
+============================================================
+NASA candidate regions for Artemis III crewed landing (2023).
+All sites are within 80–90°S dataset coverage.
+
+  Site                     Lat     Lon   safe_A  miss_A   fin_A   safe_B  miss_B   fin_B  Class (A)
+  ----------------------------------------------------------------------------------------------
+  Faustini Crater       -87.30   77.00   0.0000  0.6431  0.0000   0.0000  0.3716  0.0000  RISKY_LANDING
+  Shackleton Ridge      -89.50    0.00   0.6552  0.2104  0.3883   0.6050  0.5993  0.6033  SAFE_LANDING
+  Haworth Edge          -86.90   -5.30   0.4022  0.5738  0.5052   0.2867  0.2779  0.2841  RISKY_LANDING
+  Nobile Rim            -85.20   53.50   0.4230  0.5532  0.5011   0.3144  0.1239  0.2572  TRAVERSE_CORRIDOR
+
+  Columns: safe_A/miss_A/fin_A = Profile A (geological/slope≤20)
+           safe_B/miss_B/fin_B = Profile B (water_ice/slope≤15)
+============================================================

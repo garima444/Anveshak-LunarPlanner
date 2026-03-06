@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Anveshak</h1>
+    <p class="subtitle">Lunar South Pole Mission Planner</p>
+    <p class="description">
+        Configure your rover profile and Anveshak will identify optimal landing
+        sites and plan a safe traverse — powered by NASA LOLA elevation data.
+    </p>
+</section>
+
+<section class="card">
+    <h2>Rover Profile</h2>
+    <form id="mission-form">
+        <fieldset>
+            <legend>Mission Identity</legend>
+            <div class="form-row">
+                <label>Rover Name
+                    <input type="text" name="rover_name" value="Anveshak-1" />
+                </label>
+                <label>Mission Type
+                    <select name="mission_type">
+                        <option value="water_ice" selected>Water Ice</option>
+                        <option value="geological">Geological</option>
+                        <option value="atmospheric">Atmospheric</option>
+                    </select>
+                </label>
+                <label>Power Source
+                    <select name="power_source">
+                        <option value="rtg" selected>RTG</option>
+                        <option value="solar">Solar</option>
+                    </select>
+                </label>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Traverse Parameters</legend>
+            <div class="form-row">
+                <label>Max Slope (°)
+                    <input type="number" name="max_slope_deg" value="15" min="1" max="45" step="0.5" />
+                </label>
+                <label>Min Flat Radius (m)
+                    <input type="number" name="min_flat_radius_m" value="300" min="50" max="2000" step="50" />
+                </label>
+                <label>Speed (km/h)
+                    <input type="number" name="speed_kmh" value="0.5" min="0.1" max="10" step="0.1" />
+                </label>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Science vs Safety Priority</legend>
+            <div class="form-row">
+                <label>Priority (0 = max safety → 1 = max science)
+                    <input type="number" name="priority" value="0.3" min="0" max="1" step="0.05" />
+                </label>
+            </div>
+        </fieldset>
+
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;">
+            <button type="submit" class="btn-primary" id="run-btn">Run Mission Planner</button>
+            <button type="button" class="btn-secondary" id="demo-btn">Try Demo</button>
+            <a href="/docs" class="btn-secondary" target="_blank">API Docs</a>
+            <a href="/health" class="btn-secondary" target="_blank">Health</a>
+        </div>
+    </form>
+    <div id="form-status" class="status-msg hidden"></div>
+</section>
+
+<div id="results-area" class="hidden">
+    <section class="card">
+        <h2>Mission Summary</h2>
+        <div id="mission-summary" class="mission-report"></div>
+    </section>
+
+    <section class="card">
+        <h2>Top Landing Sites</h2>
+        <div style="overflow-x:auto;">
+            <table class="sites-table" id="sites-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Lat</th>
+                        <th>Lon</th>
+                        <th>Elev (m)</th>
+                        <th>Slope (°)</th>
+                        <th>Safety</th>
+                        <th>Mission</th>
+                        <th>Final</th>
+                        <th>Reasoning</th>
+                    </tr>
+                </thead>
+                <tbody id="sites-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Mission Map</h2>
+        <div id="map-container" class="terrain-embed"></div>
+    </section>
+
+    <section class="card">
+        <h2>Score Chart</h2>
+        <div id="chart-container" class="terrain-embed"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function runAnalysis(payload) {
+    const status = document.getElementById('form-status');
+    const runBtn = document.getElementById('run-btn');
+    const demoBtn = document.getElementById('demo-btn');
+
+    status.className = 'status-msg';
+    status.textContent = 'Analysing terrain… this may take 30–120 seconds on first load.';
+
+    runBtn.disabled = true;
+    demoBtn.disabled = true;
+
+    try {
+        const resp = await fetch(payload === null ? '/demo' : '/analyze', {
+            method: payload === null ? 'GET' : 'POST',
+            headers: payload === null ? {} : {'Content-Type': 'application/json'},
+            body: payload === null ? undefined : JSON.stringify(payload),
+        });
+
+        const json = await resp.json();
+
+        if (!resp.ok) {
+            throw new Error(json.detail || `HTTP ${resp.status}`);
+        }
+
+        // Mission summary
+        document.getElementById('mission-summary').textContent = json.mission_summary;
+
+        // Sites table
+        const tbody = document.getElementById('sites-tbody');
+        tbody.innerHTML = '';
+        for (const s of json.top_sites) {
+            const tr = document.createElement('tr');
+            if (s.rank === 1) tr.className = 'top-site';
+            tr.innerHTML = `
+                <td>${s.rank}</td>
+                <td>${s.lat.toFixed(3)}°</td>
+                <td>${s.lon.toFixed(3)}°</td>
+                <td>${s.elevation_m.toFixed(0)}</td>
+                <td>${s.slope_deg.toFixed(1)}</td>
+                <td>${s.safety_score.toFixed(3)}</td>
+                <td>${s.mission_score.toFixed(3)}</td>
+                <td>${s.final_score.toFixed(3)}</td>
+                <td style="font-size:0.8rem;color:var(--text-dim)">${s.reasoning}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Inject Plotly HTML fragments
+        document.getElementById('map-container').innerHTML = json.map_html;
+        document.getElementById('chart-container').innerHTML = json.chart_html;
+
+        document.getElementById('results-area').classList.remove('hidden');
+        document.getElementById('results-area').scrollIntoView({behavior: 'smooth'});
+
+        status.textContent = 'Analysis complete.';
+
+    } catch (err) {
+        status.className = 'status-msg error';
+        status.textContent = 'Error: ' + err.message;
+    } finally {
+        runBtn.disabled = false;
+        demoBtn.disabled = false;
+    }
+}
+
+document.getElementById('mission-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    const payload = {
+        rover_name:        data.rover_name,
+        mission_type:      data.mission_type,
+        power_source:      data.power_source,
+        max_slope_deg:     parseFloat(data.max_slope_deg),
+        min_flat_radius_m: parseFloat(data.min_flat_radius_m),
+        speed_kmh:         parseFloat(data.speed_kmh),
+        priority:          parseFloat(data.priority),
+    };
+    runAnalysis(payload);
+});
+
+document.getElementById('demo-btn').addEventListener('click', () => {
+    runAnalysis(null);
+});
+</script>
+{% endblock %}

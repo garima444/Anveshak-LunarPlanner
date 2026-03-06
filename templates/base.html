@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Anveshak{% endblock %} — Lunar South Pole Mission Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="nav-brand">🌑 Anveshak</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/docs" target="_blank">API Docs</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>Anveshak v0.1.0 — Lunar South Pole Mission Planner &nbsp;|&nbsp;
+           Data: NASA LOLA DEM</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

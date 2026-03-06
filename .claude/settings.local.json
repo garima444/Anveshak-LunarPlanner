@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:pds-geosciences.wustl.edu)",
+      "WebFetch(domain:pgda.gsfc.nasa.gov)",
+      "WebSearch",
+      "WebFetch(domain:astrogeology.usgs.gov)",
+      "Bash(find data -type f -exec ls -lh {} ;)",
+      "Bash(tail:*)",
+      "Bash(conda run:*)",
+      "Bash(powershell:*)",
+      "Bash(python:*)",
+      "Bash(conda env:*)",
+      "Bash(conda info:*)",
+      "Bash(dir Z:\\\\Anveshak:*)",
+      "Bash(tasklist:*)",
+      "Bash(ls:*)",
+      "Bash(pip install:*)"
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Mission {{ mission_id }}{% endblock %}
+
+{% block content %}
+<section class="results-header">
+    <h1>Mission Results</h1>
+    <p class="mission-id">ID: <code>{{ mission_id }}</code></p>
+</section>
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ error }}
+    <p><a href="/">← Back to planner</a></p>
+</div>
+{% else %}
+
+<section class="card">
+    <h2>Top Landing Sites</h2>
+    {% if sites %}
+    <table class="sites-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>ID</th>
+                <th>Lon (°)</th>
+                <th>Lat (°)</th>
+                <th>Elevation (m)</th>
+                <th>Slope (°)</th>
+                <th>Roughness (m)</th>
+                <th>Score</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for site in sites %}
+            <tr class="{{ 'top-site' if site.rank == 1 else '' }}">
+                <td>{{ site.rank }}</td>
+                <td>{{ site.site_id }}</td>
+                <td>{{ "%.3f"|format(site.lon_deg) }}</td>
+                <td>{{ "%.3f"|format(site.lat_deg) }}</td>
+                <td>{{ "%.1f"|format(site.elevation_m) }}</td>
+                <td>{{ "%.1f"|format(site.slope_deg) }}</td>
+                <td>{{ "%.2f"|format(site.roughness_m) }}</td>
+                <td><strong>{{ "%.3f"|format(site.score) }}</strong></td>
+                <td>{{ site.notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No landing sites found for the given constraints.</p>
+    {% endif %}
+</section>
+
+{% if terrain_html %}
+<section class="card">
+    <h2>Terrain Map</h2>
+    <div class="terrain-embed">
+        {{ terrain_html | safe }}
+    </div>
+</section>
+{% endif %}
+
+{% if report_md %}
+<section class="card">
+    <h2>Mission Report</h2>
+    <pre class="mission-report">{{ report_md }}</pre>
+    <a href="/results/{{ mission_id }}/report" class="btn-secondary" download>Download Report</a>
+</section>
+{% endif %}
+
+<p><a href="/">← Plan another mission</a></p>
+
+{% endif %}
+{% endblock %}

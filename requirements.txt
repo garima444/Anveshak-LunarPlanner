@@ -1,0 +1,31 @@
+# ============================================================
+# Anveshak — Lunar South Pole Mission Planner
+# Environment: conda env named "anveshak"
+#
+# Step 1 — create conda env (handles GDAL/rasterio on Windows):
+#   conda create -n anveshak python=3.11 rasterio numpy scipy -c conda-forge
+#   conda activate anveshak
+#
+# Step 2 — pip install everything below:
+#   pip install -r requirements.txt
+# ============================================================
+
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+jinja2==3.1.5
+aiofiles==24.1.0
+
+# Data validation (FastAPI dependency)
+pydantic==2.10.6
+
+# Visualization
+plotly==6.0.1
+
+# Utilities
+python-dotenv==1.0.1
+
+# NOTE: rasterio, numpy, scipy are installed via conda (conda-forge).
+# Do NOT pip install rasterio on Windows — it requires a pre-built GDAL
+# which conda-forge provides automatically.
