@@ -22,12 +22,22 @@ def build_cost_grid(
     slope: np.ndarray,
     resolution_m: float,
     max_slope_deg: float,
-    slope_penalty_factor: float = 10.0,
+    slope_penalty_factor: float = 15.0,
+    science_map: np.ndarray | None = None,
+    science_weight: float = 0.0,
+    mobility_risk_map: np.ndarray | None = None,
+    mobility_penalty_factor: float = 3.0,
+    mobility_impassable_thresh: float = 0.85,
 ) -> np.ndarray:
     """Build a per-pixel traversal cost grid for the A* planner.
 
     Impassable pixels (slope > *max_slope_deg* or NaN) are set to inf.
     Passable pixels receive a cost of ``resolution_m * exp(slope / slope_penalty_factor)``.
+
+    slope_penalty_factor=15.0: derived from the energy model — at a typical 10° slope,
+    exp(10/15)=1.95× vs exp(10/10)=2.72×. The energy model shows ~52% uphill cost increase
+    at moderate slopes (sin(10°)×SLOPE_MOTOR_FACTOR=3.0); factor=15 matches this gradient
+    more faithfully than the previous value of 10 which over-penalised gentle slopes.
 
     Parameters
     ----------
@@ -41,13 +51,33 @@ def build_cost_grid(
         Slope threshold above which a pixel is considered impassable.
     slope_penalty_factor : float
         Denominator in the exponent; larger = gentler penalty curve.
+    science_map : np.ndarray | None
+        Float32 science value raster in [0, 1] from build_science_map().
+        When provided with science_weight > 0, reduces traversal cost at
+        scientifically valuable pixels so A* naturally routes through them.
+    science_weight : float
+        Derived from rover priority slider: priority × 0.5.  Maximum 50%
+        cost reduction preserves energy safety margin (design choice).
+    mobility_risk_map : np.ndarray | None
+        Float32 Bekker-Wong sinkage risk raster in [0, 1] from
+        core.mobility.compute_trafficability_map().  0 = safe nominal
+        regolith; 1 = sinkage reaches stuck threshold.
+        Source: Bekker (1969); Carrier et al. (1991); Wong (2008) §2.5.
+    mobility_penalty_factor : float
+        Exponent multiplier for soft terrain: cost ×= exp(risk × factor).
+        3.0 aligns with SLOPE_MOTOR_FACTOR so soft-soil and steep-slope
+        penalties are comparable in magnitude.
+    mobility_impassable_thresh : float
+        Mobility risk above which a pixel is marked impassable (cost=inf).
+        0.85 means z ≥ 85 % of the stuck-threshold sinkage — consistent with
+        the safety margin recommended in Wong (2008) §2.5.
 
     Returns
     -------
     cost_grid : np.ndarray
-        2-D float64 array; inf where impassable, positive elsewhere.
+        2-D float32 array; inf where impassable, positive elsewhere.
     """
-    cost = np.full(slope.shape, np.inf, dtype=np.float64)
+    cost = np.full(slope.shape, np.inf, dtype=np.float32)
 
     passable = (
         np.isfinite(slope) &
@@ -55,11 +85,74 @@ def build_cost_grid(
         (slope <= max_slope_deg)
     )
 
-    cost[passable] = resolution_m * np.exp(
-        slope[passable].astype(np.float64) / slope_penalty_factor
+    cost[passable] = np.float32(resolution_m) * np.exp(
+        slope[passable].astype(np.float32) / np.float32(slope_penalty_factor)
     )
 
+    # Science discount: reduce traversal cost at high-value pixels.
+    # Multiplicative factor (1 − w·s) where s∈[0,1], w∈[0,0.5].
+    # Floor at 0.1 keeps cost bounded so A* heuristic stays admissible.
+    if science_map is not None and science_weight > 0.0:
+        discount = np.float32(1.0) - (
+            np.float32(science_weight) * science_map[passable].astype(np.float32)
+        )
+        discount = np.clip(discount, np.float32(0.1), np.float32(1.0))
+        cost[passable] *= discount
+
+    # Soft terrain (Bekker-Wong) mobility penalty.
+    # Pixels whose sinkage risk ≥ mobility_impassable_thresh are blocked (cost=inf);
+    # remaining high-risk pixels receive an exponential cost surcharge so A*
+    # naturally routes around soft areas when an alternative exists.
+    # Source: Bekker (1969); Wong (2008) §2.5; Arvidson et al. (2011).
+    if mobility_risk_map is not None:
+        thresh = np.float32(mobility_impassable_thresh)
+        too_soft = passable & (mobility_risk_map >= thresh)
+        cost[too_soft] = np.inf
+
+        safe_soft = passable & (mobility_risk_map < thresh)
+        risk_vals  = mobility_risk_map[safe_soft].astype(np.float32)
+        cost[safe_soft] *= np.exp(risk_vals * np.float32(mobility_penalty_factor))
+
     return cost
+
+
+# ---------------------------------------------------------------------------
+# Snap to passable pixel
+# ---------------------------------------------------------------------------
+
+def snap_to_passable(
+    point: tuple[int, int],
+    cost_grid: np.ndarray,
+    max_radius: int = 50,
+) -> tuple[int, int] | None:
+    """Find the nearest passable pixel to *point* within *max_radius*.
+
+    Uses an expanding square-ring search. Returns the closest passable
+    (row, col) or ``None`` if nothing found within the search radius.
+    """
+    r, c = point
+    rows, cols = cost_grid.shape
+
+    if 0 <= r < rows and 0 <= c < cols and np.isfinite(cost_grid[r, c]):
+        return (r, c)
+
+    for radius in range(1, max_radius + 1):
+        best = None
+        best_dist = float("inf")
+        for dr in range(-radius, radius + 1):
+            for dc in range(-radius, radius + 1):
+                if abs(dr) != radius and abs(dc) != radius:
+                    continue  # only the ring perimeter
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and np.isfinite(cost_grid[nr, nc]):
+                    dist = dr * dr + dc * dc
+                    if dist < best_dist:
+                        best = (nr, nc)
+                        best_dist = dist
+        if best is not None:
+            return best
+
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -296,6 +389,8 @@ def generate_waypoints(
     mission_type: str,
     n: int = 3,
     anomalies: list[dict] | None = None,
+    science_map: np.ndarray | None = None,
+    science_experiments: list[str] | None = None,
 ) -> list[tuple[int, int]]:
     """Select up to *n* waypoints from *top_sites* filtered by mission priority.
 
@@ -328,6 +423,26 @@ def generate_waypoints(
     if not top_sites:
         return []
 
+    # When science experiments are selected, re-score top_sites by blending
+    # final_score (60%) with science value at the site pixel (40%).
+    # This ensures waypoints favour scientifically rich terrain while still
+    # respecting the overall mission priority score.
+    if science_map is not None and science_experiments:
+        h, w = science_map.shape
+        top_sites = sorted(
+            top_sites,
+            key=lambda s: (
+                np.float32(0.6) * s["final_score"]
+                + np.float32(0.4) * float(
+                    science_map[
+                        max(0, min(s["pixel_row"], h - 1)),
+                        max(0, min(s["pixel_col"], w - 1)),
+                    ]
+                )
+            ),
+            reverse=True,
+        )
+
     # ---- Anomaly-based waypoints (preferred when available) ----
     if anomalies:
         relevant = sorted(
@@ -344,7 +459,7 @@ def generate_waypoints(
         ]
         seen: set[tuple[int, int]] = set(wpts)
 
-        # Build sorted top_sites fallback
+        # Build sorted top_sites fallback (already re-scored above if science active)
         if mission_type == "water_ice":
             sorted_sites = sorted(top_sites, key=lambda s: s["lat"])
         elif mission_type == "geological":
@@ -387,6 +502,8 @@ def find_path(
     rover_profile: dict,
     resolution_m: float = 60.0,
     elevation: np.ndarray | None = None,
+    science_map: np.ndarray | None = None,
+    mobility_risk_map: np.ndarray | None = None,
 ) -> tuple[list[tuple[int, int]] | None, dict | None]:
     """Plan a rover path from *start* to *goal* on the given terrain.
 
@@ -405,6 +522,10 @@ def find_path(
         Ground sampling distance in metres per pixel.
     elevation : np.ndarray | None
         2-D elevation array; synthesised as zeros if not provided.
+    mobility_risk_map : np.ndarray | None
+        Float32 Bekker-Wong sinkage risk raster [0, 1] from
+        core.mobility.compute_trafficability_map(); None disables soft terrain
+        routing.  Passed straight through to build_cost_grid().
 
     Returns
     -------
@@ -415,12 +536,32 @@ def find_path(
     if elevation is None:
         elevation = np.zeros_like(slope)
 
-    max_slope_deg = float(rover_profile.get("max_slope_deg", 20.0))
-    penalty_factor = float(rover_profile.get("slope_penalty_factor", 10.0))
-    speed_kmh = float(rover_profile.get("speed_kmh", 0.5))
+    max_slope_deg  = float(rover_profile.get("max_slope_deg", 20.0))
+    penalty_factor = float(rover_profile.get("slope_penalty_factor", 15.0))
+    speed_kmh      = float(rover_profile.get("speed_kmh", 0.5))
+    # science_weight = priority × 0.5 so max discount is 50% at priority=1.0
+    science_weight = float(rover_profile.get("priority", 0.0)) * 0.5
 
-    cost_grid = build_cost_grid(elevation, slope, resolution_m, max_slope_deg, penalty_factor)
-    path = astar(cost_grid, start, goal)
+    cost_grid = build_cost_grid(
+        elevation, slope, resolution_m, max_slope_deg, penalty_factor,
+        science_map=science_map, science_weight=science_weight,
+        mobility_risk_map=mobility_risk_map,
+    )
+
+    # Snap start and goal to nearest passable pixels
+    snapped_start = snap_to_passable(start, cost_grid)
+    snapped_goal = snap_to_passable(goal, cost_grid)
+
+    if snapped_start is None or snapped_goal is None:
+        print(f"[find_path] Cannot snap start={start} or goal={goal} to passable pixel.")
+        return None, None
+
+    if snapped_start != start:
+        print(f"[find_path] Snapped start {start} -> {snapped_start}")
+    if snapped_goal != goal:
+        print(f"[find_path] Snapped goal {goal} -> {snapped_goal}")
+
+    path = astar(cost_grid, snapped_start, snapped_goal)
 
     if path is None:
         return None, None
@@ -428,8 +569,15 @@ def find_path(
     stats = compute_path_stats(path, slope, resolution_m, speed_kmh)
 
     from core.energy_model import compute_path_energy  # noqa: PLC0415
-    energy_stats = compute_path_energy(path, slope, rover_profile, resolution_m, elevation)
+    energy_stats = compute_path_energy(
+        path, slope, rover_profile, resolution_m, elevation,
+        mobility_risk_map=mobility_risk_map,
+    )
     stats.update(energy_stats)   # no key collisions — all new keys
+
+    # battery_feasible: False when the path demands more energy than the rover's battery.
+    # A value >100% means the rover runs out of power mid-traverse — caller should warn.
+    stats["battery_feasible"] = stats.get("battery_pct_used", 0.0) <= 100.0
 
     return path, stats
 
