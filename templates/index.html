@@ -7,74 +7,558 @@
     <h1>Anveshak</h1>
     <p class="subtitle">Lunar South Pole Mission Planner</p>
     <p class="description">
-        Configure your rover profile and Anveshak will identify optimal landing
-        sites and plan a safe traverse — powered by NASA LOLA elevation data.
+        Configure your rover and Anveshak identifies optimal landing sites,
+        plans a safe traverse, and estimates energy budget — powered by NASA LOLA elevation data.
     </p>
 </section>
 
 <section class="card">
     <h2>Rover Profile</h2>
     <form id="mission-form">
+
+        <!-- ── Rover Class Presets (fetched dynamically from /rover_presets) ── -->
+        <fieldset>
+            <legend>Rover Class Preset</legend>
+            <div class="preset-group" id="preset-group">
+                <span style="color:var(--text-dim,#888);font-size:0.8rem">Loading presets…</span>
+            </div>
+            <p class="preset-citation" id="preset-citation">Fill in your own rover specifications below.</p>
+        </fieldset>
+
+        <!-- ── Mission Identity ── -->
         <fieldset>
             <legend>Mission Identity</legend>
             <div class="form-row">
                 <label>Rover Name
                     <input type="text" name="rover_name" value="Anveshak-1" />
                 </label>
+                <label>Mission Name
+                    <input type="text" name="mission_name" value="Mission Alpha" />
+                </label>
+                <label>Agency
+                    <input type="text" name="agency" value="" placeholder="e.g. ISRO, NASA, CNSA" />
+                </label>
                 <label>Mission Type
                     <select name="mission_type">
-                        <option value="water_ice" selected>Water Ice</option>
-                        <option value="geological">Geological</option>
-                        <option value="atmospheric">Atmospheric</option>
+                        <option value="water_ice" selected>Water Ice Prospecting</option>
+                        <option value="geological">Geological Survey</option>
+                        <option value="atmospheric">Atmospheric / High-Ridge</option>
                     </select>
                 </label>
                 <label>Power Source
                     <select name="power_source">
-                        <option value="rtg" selected>RTG</option>
-                        <option value="solar">Solar</option>
+                        <option value="rtg" selected>RTG (Nuclear)</option>
+                        <option value="solar">Solar (Photovoltaic)</option>
                     </select>
                 </label>
             </div>
         </fieldset>
 
+        <!-- ── Terrain Constraints ── -->
         <fieldset>
-            <legend>Traverse Parameters</legend>
+            <legend>Traverse &amp; Power Constraints</legend>
             <div class="form-row">
-                <label>Max Slope (°)
+                <div class="field-wrap">
+                    <label style="gap:0">Max Slope (°)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Maximum slope the rover wheels can safely traverse.<br><br>
+                                <strong>Pragyan (ISRO):</strong> 12° (6-wheel rocker-bogie,
+                                26 kg). Source: ISRO Chandrayaan-3 mission spec.<br>
+                                <strong>VIPER (NASA):</strong> 20° (MMSEV suspension,
+                                433 kg). Source: NASA Fact Sheet NF-2022-08-032-JSC.<br>
+                                <strong>Generic:</strong> 15° conservative default.
+                            </span>
+                        </span>
+                    </label>
                     <input type="number" name="max_slope_deg" value="15" min="1" max="45" step="0.5" />
-                </label>
-                <label>Min Flat Radius (m)
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Min Flat Radius (m)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Minimum radius of flat terrain required around the landing
+                                target for a safe touchdown and initial deployment.
+                                Typical values: 200–500 m. Larger values select plateau
+                                sites; smaller values allow crater-rim landings.
+                            </span>
+                        </span>
+                    </label>
                     <input type="number" name="min_flat_radius_m" value="300" min="50" max="2000" step="50" />
-                </label>
-                <label>Speed (km/h)
-                    <input type="number" name="speed_kmh" value="0.5" min="0.1" max="10" step="0.1" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Speed (km/h)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Nominal traverse speed on flat terrain.<br><br>
+                                <strong>Pragyan:</strong> 0.036 km/h (1 cm/s wheel speed).
+                                Source: ISRO mission report.<br>
+                                <strong>VIPER:</strong> 0.6 km/h nominal.
+                                Source: NASA/TM-2022-217504.<br>
+                                <strong>Yutu-2:</strong> 0.2 km/h.
+                                Affects estimated traverse time only; path cost is
+                                slope-weighted, not speed-dependent.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="speed_kmh" value="0.5" min="0.01" max="10" step="0.01" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Battery Capacity (Wh)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Total onboard energy storage in Watt-hours.
+                                The planner checks whether the planned path exceeds
+                                this capacity and warns if infeasible.<br><br>
+                                <strong>Pragyan (ISRO):</strong> ~50 Wh (30 W solar panel,
+                                ~1.6 h charge cycle). Source: ISRO Chandrayaan-3 report.<br>
+                                <strong>VIPER (NASA):</strong> ~450 Wh (4× Saft Li-ion cells).
+                                Source: JPL Tech Brief NPO-50021.<br>
+                                <strong>Yutu-2 (CNSA):</strong> ~52 Wh + nuclear heater.
+                                Source: CNSA Chang'e-4 mission data.<br>
+                                <strong>Generic RTG:</strong> 1000 Wh buffer (conceptual).
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="battery_wh" value="1000" min="10" max="20000" step="10" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Abs Max Slope (°)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Hard absolute limit — terrain steeper than this is always impassable.
+                                Must be ≥ Max Slope. Default 25° adds a safety buffer above the
+                                nominal max_slope threshold.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="abs_max_slope_deg" value="25" min="1" max="45" step="0.5" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Wheel Radius (m)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Wheel radius in metres. Used for Bekker-Wong terramechanics (sinkage risk)
+                                and roughness hazard threshold.<br><br>
+                                <strong>Pragyan:</strong> 0.075 m &nbsp;
+                                <strong>VIPER:</strong> 0.25 m
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="wheel_radius_m" value="0.25" min="0.01" max="2.0" step="0.01" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Rover Mass (kg)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Total rover mass. Used for Bekker-Wong per-wheel load calculation.<br><br>
+                                <strong>Pragyan:</strong> 26 kg &nbsp;
+                                <strong>VIPER:</strong> 430 kg
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="rover_mass_kg" value="150" min="1" max="10000" step="1" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Mission Duration (days)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Planned mission duration in Earth days. Affects energy budget calculations.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="mission_duration_days" value="14" min="1" max="365" step="1" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ── Solar Configuration (visible only when power_source == solar) ── -->
+        <fieldset id="solar-fieldset" class="hidden">
+            <legend>Solar Configuration</legend>
+            <div class="form-row">
+                <div class="field-wrap">
+                    <label style="gap:0">Solar Panel Power (W)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Rated net output of the solar panel array in Watts.<br><br>
+                                <strong>Pragyan (ISRO):</strong> 50 W panel.
+                                Source: ISRO Chandrayaan-3 Mission Report 2023.<br>
+                                <strong>VIPER (NASA):</strong> ~450 W peak array.
+                                Source: NASA Fact Sheet NF-2022-08-032-JSC.<br>
+                                <strong>Yutu-2 (CNSA):</strong> ~52 W.
+                                Source: CNSA Chang'e-4 mission documentation.<br><br>
+                                Net charge rate at a stop =
+                                panel_W × illumination_fraction − 25 W idle.
+                                (25 W idle = Pragyan thermal/avionics floor;
+                                ISRO Chandrayaan-3 Mission Report 2023.)
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="solar_panel_w" value="50" min="1" max="5000" step="1" />
+                </div>
+                <div class="field-wrap">
+                    <label style="gap:0">Mission Day (synodic)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Day within the 29.53-day lunar synodic cycle at mission start.<br><br>
+                                <strong>Day 0</strong> = new moon (minimum south-pole Sun elevation,
+                                poorest charging conditions).<br>
+                                <strong>Day ~7.4</strong> = first quarter (maximum south-pole
+                                illumination — best for solar rovers).<br>
+                                <strong>Day ~14.76</strong> = full moon (zero net Sun elevation
+                                at south pole).<br><br>
+                                Source: IAU standard synodic period 29.530589 days
+                                (Seidelmann 1992, Explanatory Supplement p. 699).
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" name="mission_day" value="7.4" min="0" max="29.52" step="0.1" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ── PSR Strategy ── -->
+        <fieldset>
+            <legend>PSR Access Strategy
+                <span class="info-icon" tabindex="0">i
+                    <span class="tooltip-text">
+                        <strong>PSR = Permanently Shadowed Region.</strong><br><br>
+                        Due to the Moon's tiny axial tilt (1.54°), deep crater floors near
+                        the poles never receive direct sunlight. Temperatures can drop to
+                        −230 °C. Over billions of years, cometary water ice has accumulated
+                        in these regions.<br><br>
+                        <strong>Why it matters:</strong> LCROSS (2009) confirmed water ice
+                        in Cabeus PSR. VIPER, Artemis 3, and Chang'e-7 all target PSR
+                        access for volatile prospecting.<br><br>
+                        Source: Colaprete et al. (2010) Science 330:463.
+                        doi:10.1126/science.1186986
+                    </span>
+                </span>
+            </legend>
+            <div class="form-row">
+                <label>PSR Intent
+                    <select name="psr_intent">
+                        <option value="rim" selected>Stay on PSR Rim — land sunlit, short sorties inside (VIPER / Artemis)</option>
+                        <option value="enter">Enter PSR — RTG rover drills inside for ice (Chang'e-7 style)</option>
+                        <option value="avoid">Avoid PSR — atmospheric / geology mission needs full sunlight</option>
+                    </select>
                 </label>
             </div>
         </fieldset>
 
+        <!-- ── Science Experiments ── -->
+        <fieldset id="science-fieldset">
+            <legend>Science Experiments
+                <span class="info-icon" tabindex="0">i
+                    <span class="tooltip-text">
+                        Select experiments to guide path routing. The A* planner
+                        reduces traversal cost through scientifically valuable terrain
+                        (science weight&nbsp;= Priority &times; 0.5).<br><br>
+                        <strong>Leave empty</strong> for slope-only routing (safest path).<br>
+                        <strong>Raise Priority</strong> to strengthen the science bias.<br><br>
+                        &#9889; = uses optional data file when present in
+                        data/Thermal, data/Mineralogy, data/Geology;
+                        falls back to computed proxy automatically.
+                    </span>
+                </span>
+            </legend>
+            <div class="form-row">
+                <div class="field-wrap" style="min-width:100%">
+                    <label>Experiment Catalog
+                        <span style="font-weight:400;font-size:0.75em;">
+                            (Ctrl / Cmd&#8209;click to select multiple; none&nbsp;=&nbsp;slope&#8209;only routing)
+                        </span>
+                    </label>
+                    <select name="science_experiments" id="science-experiments-select"
+                            multiple size="5"
+                            style="width:100%;min-height:7.5rem;font-size:0.78rem;">
+                        <option value="volatile_detection">volatile_detection &#9889; &mdash; Water Ice Detection (NASA LOLA PSR mask)</option>
+                        <option value="mineralogy">mineralogy &#9889; &mdash; Subsurface Hydration (Mini-RF CPR 128ppd &middot; Spudis 2013)</option>
+                        <option value="thermal_environment">thermal_environment &#9889; &mdash; Thermal Gradient Zones (NASA LOLA illumination &middot; Mazarico 2011)</option>
+                        <option value="geomorphology">geomorphology &#9889; &mdash; Terrain Morphology (NASA LOLA MAS fractal roughness &middot; Kreslavsky 2000)</option>
+                        <option value="space_weathering">space_weathering &#9889; &mdash; Surface Freshness (NASA LOLA MAS ratio + Hurst exponent &middot; Kreslavsky 2000)</option>
+                    </select>
+                    <p style="font-size:0.65rem;color:var(--text-dim,#888);margin-top:0.35rem;line-height:1.4">
+                        &#9889; uses real NASA data; proxy used automatically when file absent.<br>
+                        Sources: Paige 2010, Spudis 2013, Mazarico 2011, Vasavada 2012, Kreslavsky 2000.
+                    </p>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ── Science vs Safety Priority ── -->
         <fieldset>
             <legend>Science vs Safety Priority</legend>
             <div class="form-row">
-                <label>Priority (0 = max safety → 1 = max science)
+                <div class="field-wrap">
+                    <label style="gap:0">Priority (0 = max safety → 1 = max science)
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Controls how safety and science scores are blended.<br><br>
+                                <strong>0.0–0.49 (safety-first):</strong> 70% safety + 30% science.
+                                Recommended for crewed missions and Pragyan-class rovers
+                                with limited redundancy.<br>
+                                <strong>0.5–1.0 (science-first):</strong> 40% safety + 60% science.
+                                For RTG rovers with high fault tolerance targeting specific PSRs.
+                                Safety floor never drops below 40% to prevent crater-wall selections.
+                            </span>
+                        </span>
+                    </label>
                     <input type="number" name="priority" value="0.3" min="0" max="1" step="0.05" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ── Terrain Data (DEM Region) ── -->
+        <fieldset>
+            <legend>Terrain Data Source</legend>
+            <div class="form-row">
+                <div class="field-wrap" style="min-width:100%">
+                    <label style="gap:0">DEM Region
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                Select the NASA LOLA Digital Elevation Model to use.<br><br>
+                                <strong>80–90°S (60 m/px):</strong> Full south-pole coverage.
+                                Best general-purpose choice. 256 MB, ~30–60 s load.<br>
+                                <strong>85–90°S (30 m/px):</strong> Higher detail for Artemis
+                                candidate zones (Shackleton, Nobile, Haworth). 221 MB.<br>
+                                <strong>87–90°S (15 m/px):</strong> Maximum detail for
+                                Shackleton/Chang'e-7 area. 3.3 GB, 3–5 min load.<br>
+                                <strong>Upload Custom:</strong> Your own GeoTIFF / JP2 DEM.
+                                Must be georeferenced. Max 500 MB upload.<br><br>
+                                Source: Smith et al. (2010) Space Sci. Rev. 150:209–241.
+                            </span>
+                        </span>
+                    </label>
+                    <select name="dem_region" id="dem-region-select">
+                        <option value="south_pole_80_90" selected>South Pole 80–90°S · 60 m/px · 256 MB (default)</option>
+                        <option value="south_pole_85_90">South Pole 85–90°S · 30 m/px · 221 MB (Artemis/VIPER detail)</option>
+                        <option value="south_pole_87_90">South Pole 87–90°S · 15 m/px · 3.3 GB ⚠ slow (Shackleton max detail)</option>
+                        <option value="upload">Upload Custom DEM…</option>
+                    </select>
+                    <div class="dem-warn" id="dem-warn-box"></div>
+                </div>
+            </div>
+
+            <!-- Custom DEM upload area (hidden until "Upload Custom" selected) -->
+            <div class="upload-area hidden" id="upload-area">
+                <label style="text-transform:uppercase;font-size:0.62rem;letter-spacing:0.16em;color:var(--text-dim)">
+                    Custom DEM File
+                    <input type="file" id="dem-file-input" accept=".tif,.tiff,.jp2,.img,.hgt" />
                 </label>
+                <p class="upload-hint">
+                    <strong>Accepted:</strong> GeoTIFF (.tif), JPEG2000 (.jp2), ENVI (.img), SRTM (.hgt)<br>
+                    <strong>Max size:</strong> 500 MB. Large files are downsampled to 60 m/px during load.<br>
+                    <strong>Required:</strong> File must be georeferenced (CRS + affine transform).<br>
+                    <strong>CRS:</strong> Moon 2000 polar stereographic preferred. Earth DEMs will load
+                    but lat/lon labels will be incorrect.<br>
+                    <strong>Integer DEMs:</strong> Assumed to use LOLA 0.5 m/DN scaling.
+                    Float32 DEMs are assumed already in metres.<br>
+                    <strong>Known problem:</strong> GeoTIFF files are not wavelet-compressed, so GDAL
+                    may read the full file before downsampling. A 500 MB GeoTIFF uses ~500 MB RAM
+                    during load (unlike JP2 which uses only ~60 MB via wavelet levels).
+                </p>
+                <div style="margin-top:0.6rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                    <button type="button" class="btn-secondary" id="upload-btn">Upload DEM</button>
+                    <span id="upload-status" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim)"></span>
+                </div>
+            </div>
+            <!-- Hidden field to hold custom region key after upload -->
+            <input type="hidden" name="dem_region_custom" id="dem-region-custom" value="" />
+        </fieldset>
+
+        <!-- ── Focus Area ── -->
+        <fieldset id="focus-fieldset">
+            <legend>// FOCUS AREA</legend>
+            <p class="field-hint">
+                Restrict analysis to a sub-region. Use rectangular (lat bounds) or circular
+                (center + radius) specification. Leave unchecked to use the full DEM.
+            </p>
+
+            <div class="form-row" style="align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <label style="flex-direction:row;align-items:center;gap:0.4rem;font-weight:600;cursor:pointer;">
+                    <input type="checkbox" id="focus-enable" style="width:auto;accent-color:var(--amber);">
+                    Enable focus area
+                </label>
+            </div>
+
+            <div id="focus-inputs" class="hidden">
+                <!-- Mode selector -->
+                <div class="form-row" style="margin-bottom:0.5rem">
+                    <label style="flex-direction:row;align-items:center;gap:0.6rem;">
+                        <input type="radio" name="focus_mode" value="rect" checked> Rectangular (lat bounds, full longitude)
+                    </label>
+                    <label style="flex-direction:row;align-items:center;gap:0.6rem;">
+                        <input type="radio" name="focus_mode" value="circle"> Circular (center + radius)
+                    </label>
+                </div>
+
+                <!-- Rectangular inputs -->
+                <div id="focus-rect-inputs">
+                    <div class="form-row">
+                        <div class="field-wrap">
+                            <label>Focus Lat Min (°, closer to −90 = pole)
+                                <input type="number" id="focus-lat-min" name="focus_lat_min"
+                                       min="-90" max="-1" step="0.1" placeholder="-89.5">
+                            </label>
+                        </div>
+                        <div class="field-wrap">
+                            <label>Focus Lat Max (must be &gt; Lat Min)
+                                <input type="number" id="focus-lat-max" name="focus_lat_max"
+                                       min="-90" max="-1" step="0.1" placeholder="-80.0">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Circular inputs (hidden by default) -->
+                <div id="focus-circle-inputs" class="hidden">
+                    <div class="form-row">
+                        <div class="field-wrap">
+                            <label>Center Latitude (°)
+                                <input type="number" id="focus-center-lat" name="focus_center_lat"
+                                       min="-90" max="-1" step="0.01" placeholder="-88.5">
+                            </label>
+                        </div>
+                        <div class="field-wrap">
+                            <label>Center Longitude (°E, 0–360)
+                                <input type="number" id="focus-center-lon" name="focus_center_lon"
+                                       min="0" max="360" step="0.1" placeholder="15.0">
+                            </label>
+                        </div>
+                        <div class="field-wrap">
+                            <label>Radius (km)
+                                <input type="number" id="focus-radius-km" name="focus_radius_km"
+                                       min="1" max="2000" step="1" placeholder="200">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="aoi-note" id="focus-note"></p>
+            </div>
+        </fieldset>
+
+        <!-- ── Mission Target ── -->
+        <fieldset id="target-fieldset">
+            <legend>// MISSION TARGET</legend>
+            <div class="form-row">
+                <div class="field-wrap" style="min-width:100%">
+                    <label>Target Mode
+                        <span class="info-icon" tabindex="0">i
+                            <span class="tooltip-text">
+                                <strong>Auto:</strong> The planner picks the best science target
+                                based on your mission type — DBSCAN anomaly clusters for water-ice
+                                and geological missions, highest ridge for atmospheric.<br><br>
+                                <strong>Custom:</strong> You specify a target coordinate and optional
+                                name (e.g. "Shackleton Crater"). The A* pathfinder routes there.
+                            </span>
+                        </span>
+                    </label>
+                    <select id="target-mode">
+                        <option value="auto" selected>Auto (mission-optimised waypoint)</option>
+                        <option value="custom">Custom target coordinates</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="target-auto-hint" class="field-hint" style="margin-top:0.3rem;">
+                <span id="target-auto-text"></span>
+            </div>
+
+            <div id="target-custom-inputs" class="hidden">
+                <div class="form-row">
+                    <div class="field-wrap">
+                        <label>Target Name (optional)
+                            <input type="text" id="target-name" name="target_name"
+                                   placeholder="e.g. Shackleton Crater">
+                        </label>
+                    </div>
+                    <div class="field-wrap">
+                        <label>Target Latitude (°, negative = south)
+                            <input type="number" id="target-lat" name="target_lat"
+                                   min="-90" max="-1" step="0.01" placeholder="-88.5">
+                        </label>
+                    </div>
+                    <div class="field-wrap">
+                        <label>Target Longitude (°E, 0–360)
+                            <input type="number" id="target-lon" name="target_lon"
+                                   min="0" max="360" step="0.1" placeholder="15.0">
+                        </label>
+                    </div>
+                </div>
+                <p class="field-hint">
+                    The A* planner routes from the best landing site to this target.
+                    Impassable terrain is automatically routed around.
+                </p>
+            </div>
+        </fieldset>
+
+        <!-- ── Results Count ── -->
+        <fieldset>
+            <legend>Results</legend>
+            <div class="form-row">
+                <div class="field-wrap">
+                    <label>Number of Landing Sites
+                        <select name="n_results">
+                            <option value="1">1 — fastest</option>
+                            <option value="3" selected>3 — recommended</option>
+                            <option value="5">5</option>
+                            <option value="10">10 — comprehensive</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         </fieldset>
 
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;">
             <button type="submit" class="btn-primary" id="run-btn">Run Mission Planner</button>
             <button type="button" class="btn-secondary" id="demo-btn">Try Demo</button>
+            <a href="/setup" class="btn-secondary">Data Setup</a>
             <a href="/docs" class="btn-secondary" target="_blank">API Docs</a>
-            <a href="/health" class="btn-secondary" target="_blank">Health</a>
         </div>
     </form>
     <div id="form-status" class="status-msg hidden"></div>
 </section>
 
+<!-- ── Results ── -->
 <div id="results-area" class="hidden">
+
     <section class="card">
         <h2>Mission Summary</h2>
+        <div id="battery-warning" class="hidden"
+             style="background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;
+                    border-radius:4px;padding:0.75rem 1rem;margin-bottom:0.75rem;
+                    font-weight:600;font-family:var(--font-mono);font-size:0.78rem;">
+        </div>
         <div id="mission-summary" class="mission-report"></div>
+        <div id="aoi-active-chip" class="hidden"
+             style="margin-top:0.5rem;display:inline-block;background:rgba(232,160,32,0.12);
+                    border:1px solid var(--amber);border-radius:3px;
+                    padding:0.2rem 0.6rem;font-family:var(--font-mono);font-size:0.7rem;
+                    color:var(--amber);">
+        </div>
+        <div id="dest-used-chip" class="hidden"
+             style="margin-top:0.3rem;display:inline-block;background:rgba(200,100,200,0.1);
+                    border:1px solid #c864c8;border-radius:3px;
+                    padding:0.2rem 0.6rem;font-family:var(--font-mono);font-size:0.7rem;
+                    color:#d080d0;margin-left:0.4rem;">
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Path Statistics</h2>
+        <div class="path-stats-grid" id="path-stats-grid"></div>
+    </section>
+
+    <section class="card hidden" id="soft-terrain-section">
+        <h2>Terrain Bearing Assessment</h2>
+        <div class="path-stats-grid" id="soft-terrain-grid"></div>
+        <p id="soft-terrain-msg" style="margin-top:0.6rem;font-size:0.82rem;line-height:1.5;"></p>
+    </section>
+
+    <section class="card hidden" id="recharge-section">
+        <h2>Solar Recharge Stops</h2>
+        <div id="recharge-stops-list"></div>
     </section>
 
     <section class="card">
@@ -91,6 +575,7 @@
                         <th>Safety</th>
                         <th>Mission</th>
                         <th>Final</th>
+                        <th>Sun %</th>
                         <th>Reasoning</th>
                     </tr>
                 </thead>
@@ -113,32 +598,511 @@
 
 {% block scripts %}
 <script>
-async function runAnalysis(payload) {
-    const status = document.getElementById('form-status');
-    const runBtn = document.getElementById('run-btn');
-    const demoBtn = document.getElementById('demo-btn');
+// ---------------------------------------------------------------------------
+// Rover presets — fetched dynamically from GET /rover_presets
+// ---------------------------------------------------------------------------
+let ROVER_PRESETS = {};   // id → preset object, populated after fetch
 
-    status.className = 'status-msg';
-    status.textContent = 'Analysing terrain… this may take 30–120 seconds on first load.';
-
-    runBtn.disabled = true;
-    demoBtn.disabled = true;
-
+async function loadPresets() {
     try {
-        const resp = await fetch(payload === null ? '/demo' : '/analyze', {
-            method: payload === null ? 'GET' : 'POST',
-            headers: payload === null ? {} : {'Content-Type': 'application/json'},
-            body: payload === null ? undefined : JSON.stringify(payload),
+        const res  = await fetch('/rover_presets');
+        const list = await res.json();
+        const group = document.getElementById('preset-group');
+        group.innerHTML = '';
+        list.forEach((preset, idx) => {
+            ROVER_PRESETS[preset.id] = preset;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'preset-btn' + (preset.id === 'custom' ? ' active' : '');
+            btn.dataset.preset = preset.id;
+            btn.title = preset.source || '';
+            btn.textContent = (preset.flag ? preset.flag + ' ' : '') + preset.name;
+            btn.addEventListener('click', () => applyPreset(preset.id));
+            group.appendChild(btn);
+        });
+    } catch (e) {
+        console.error('Failed to load presets:', e);
+        document.getElementById('preset-group').innerHTML =
+            '<span style="color:#ef4444;font-size:0.8rem">Failed to load presets.</span>';
+    }
+}
+
+function applyPreset(presetId) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.preset-btn[data-preset="${presetId}"]`);
+    if (btn) btn.classList.add('active');
+
+    const citation = document.getElementById('preset-citation');
+    const preset = ROVER_PRESETS[presetId];
+    if (!preset || presetId === 'custom' || !preset.profile || Object.keys(preset.profile).length === 0) {
+        citation.textContent = 'Fill in your own rover specifications below.';
+        return;
+    }
+
+    const p = preset.profile;
+    const form = document.getElementById('mission-form');
+    const fieldsToFill = [
+        'rover_name', 'mission_type', 'power_source', 'max_slope_deg', 'abs_max_slope_deg',
+        'min_flat_radius_m', 'speed_kmh', 'priority', 'battery_wh', 'psr_intent',
+        'solar_panel_w', 'mission_day', 'wheel_radius_m', 'rover_mass_kg',
+        'mission_duration_days',
+    ];
+    fieldsToFill.forEach(f => {
+        const el = form.elements[f];
+        if (el && p[f] !== undefined) el.value = p[f];
+    });
+
+    // Trigger solar fieldset visibility
+    const psEl = form.elements['power_source'];
+    if (psEl) psEl.dispatchEvent(new Event('change'));
+
+    citation.textContent = '↳ Source: ' + (preset.source || preset.name);
+}
+
+loadPresets();
+
+// ---------------------------------------------------------------------------
+// DEM region warnings (mirrored from DEM_REGIONS in terrain.py)
+// ---------------------------------------------------------------------------
+const DEM_WARN = {
+    south_pole_87_90: "⚠  3.3 GB source DEM. First load requires ~1.5 GB RAM and 3–5 minutes. " +
+                      "Subsequent analyses reuse the cached terrain.",
+};
+
+// ---------------------------------------------------------------------------
+// DEM region coverage (lat/lon bounds for each built-in region)
+// Used to populate AOI default values and validate AOI input.
+// ---------------------------------------------------------------------------
+const DEM_COVERAGE = {
+    south_pole_80_90: { lat_min: -90, lat_max: -80, lon_min: 0, lon_max: 360,
+                        label: "80–90°S, 0–360°E" },
+    south_pole_85_90: { lat_min: -90, lat_max: -85, lon_min: 0, lon_max: 360,
+                        label: "85–90°S, 0–360°E" },
+    south_pole_87_90: { lat_min: -90, lat_max: -87, lon_min: 0, lon_max: 360,
+                        label: "87–90°S, 0–360°E" },
+    upload:           { lat_min: null, lat_max: null, lon_min: null, lon_max: null,
+                        label: "Custom DEM — full extent" },
+};
+
+// ---------------------------------------------------------------------------
+// Preset selection
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const key = btn.dataset.preset;
+        const citation = document.getElementById('preset-citation');
+
+        if (key === 'custom') {
+            citation.textContent = 'Fill in your own rover specifications below.';
+            return;
+        }
+
+        const p = ROVER_PRESETS[key];
+        if (!p) return;
+
+        // Fill all matching form fields
+        const form = document.getElementById('mission-form');
+        const fields = ['rover_name','mission_type','power_source','max_slope_deg',
+                        'min_flat_radius_m','speed_kmh','priority','battery_wh','psr_intent',
+                        'solar_panel_w','mission_day'];
+        fields.forEach(f => {
+            const el = form.elements[f];
+            if (el && p[f] !== undefined) el.value = p[f];
         });
 
+        citation.textContent = '↳ ' + p.citation;
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Solar fieldset — show/hide based on power_source selection
+// ---------------------------------------------------------------------------
+const powerSourceSelect = document.querySelector('select[name="power_source"]');
+const solarFieldset     = document.getElementById('solar-fieldset');
+
+function updateSolarFieldset() {
+    if (powerSourceSelect.value === 'solar') {
+        solarFieldset.classList.remove('hidden');
+    } else {
+        solarFieldset.classList.add('hidden');
+    }
+}
+powerSourceSelect.addEventListener('change', updateSolarFieldset);
+updateSolarFieldset(); // sync on page load
+
+// ---------------------------------------------------------------------------
+// DEM region selector — show/hide upload area + warning
+// ---------------------------------------------------------------------------
+const demSelect   = document.getElementById('dem-region-select');
+const uploadArea  = document.getElementById('upload-area');
+const demWarnBox  = document.getElementById('dem-warn-box');
+
+function updateDemCoverageBanner() {
+    const v = demSelect.value;
+    const banner = document.getElementById('dem-coverage-banner');
+    const cov = DEM_COVERAGE[v];
+    if (!cov) { banner.style.display = 'none'; return; }
+    if (cov.lat_min === null) {
+        banner.textContent = '📡 Custom DEM — coverage determined after upload.';
+    } else {
+        banner.textContent = `📡 DEM coverage: Lat ${cov.lat_max}° to ${cov.lat_min}°S, Lon ${cov.lon_min}–${cov.lon_max}°E. ` +
+                             `Select an AOI within these bounds.`;
+    }
+    banner.style.display = 'block';
+
+    // If AOI is enabled, populate defaults from coverage
+    if (document.getElementById('aoi-enable').checked && cov.lat_min !== null) {
+        const aoiLatMin = document.getElementById('aoi-lat-min');
+        const aoiLatMax = document.getElementById('aoi-lat-max');
+        const aoiLonMin = document.getElementById('aoi-lon-min');
+        const aoiLonMax = document.getElementById('aoi-lon-max');
+        if (!aoiLatMin.value) aoiLatMin.value = cov.lat_min;
+        if (!aoiLatMax.value) aoiLatMax.value = cov.lat_max;
+        if (!aoiLonMin.value) aoiLonMin.value = cov.lon_min;
+        if (!aoiLonMax.value) aoiLonMax.value = cov.lon_max;
+    }
+}
+
+demSelect.addEventListener('change', () => {
+    const v = demSelect.value;
+    if (v === 'upload') {
+        uploadArea.classList.remove('hidden');
+        demWarnBox.style.display = 'none';
+    } else {
+        uploadArea.classList.add('hidden');
+        const warn = DEM_WARN[v];
+        if (warn) {
+            demWarnBox.textContent = warn;
+            demWarnBox.style.display = 'block';
+        } else {
+            demWarnBox.style.display = 'none';
+        }
+    }
+    updateDemCoverageBanner();
+});
+updateDemCoverageBanner(); // init on page load
+
+// ---------------------------------------------------------------------------
+// Custom DEM upload
+// ---------------------------------------------------------------------------
+document.getElementById('upload-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('dem-file-input');
+    const statusEl  = document.getElementById('upload-status');
+    const runBtn    = document.getElementById('run-btn');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        statusEl.textContent = 'Select a file first.';
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    statusEl.textContent = `Uploading ${file.name} (${sizeMb} MB)…`;
+    runBtn.disabled = true;
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resp = await fetch('/upload_dem', { method: 'POST', body: formData });
         const json = await resp.json();
 
         if (!resp.ok) {
             throw new Error(json.detail || `HTTP ${resp.status}`);
         }
 
+        // Store the returned region_key for use in analyze payload
+        document.getElementById('dem-region-custom').value = json.region_key;
+
+        let msg = `✓ Uploaded. Native: ${json.native_res_m} m/px, ${json.native_size[0]}×${json.native_size[1]}px. ` +
+                  `Working: ${json.working_res_m} m/px (${json.working_size[0]}×${json.working_size[1]}px), ` +
+                  `~${json.est_ram_mb} MB RAM needed.`;
+        if (json.warn) msg += ` | ⚠ ${json.warn}`;
+        statusEl.textContent = msg;
+
+    } catch (err) {
+        statusEl.textContent = 'Upload failed: ' + err.message;
+    } finally {
+        runBtn.disabled = false;
+    }
+});
+
+// ---------------------------------------------------------------------------
+// Focus area — enable/disable + mode switching (rectangular vs circular)
+// ---------------------------------------------------------------------------
+const focusCheckbox = document.getElementById('focus-enable');
+const focusInputs   = document.getElementById('focus-inputs');
+
+focusCheckbox.addEventListener('change', () => {
+    focusInputs.classList.toggle('hidden', !focusCheckbox.checked);
+});
+
+document.querySelectorAll('input[name="focus_mode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        const isCircle = radio.value === 'circle';
+        document.getElementById('focus-rect-inputs').classList.toggle('hidden', isCircle);
+        document.getElementById('focus-circle-inputs').classList.toggle('hidden', !isCircle);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Target mode — show/hide custom inputs + auto-hint text
+// ---------------------------------------------------------------------------
+const targetMode         = document.getElementById('target-mode');
+const targetCustomInputs = document.getElementById('target-custom-inputs');
+const targetAutoHint     = document.getElementById('target-auto-hint');
+const targetAutoText     = document.getElementById('target-auto-text');
+const missionTypeSelect  = document.querySelector('select[name="mission_type"]');
+
+const TARGET_AUTO_HINTS = {
+    water_ice:   'Auto selects nearest PSR-rim anomaly cluster (highest ice probability, closest pole).',
+    geological:  'Auto selects most diverse terrain cluster (highest roughness variance, DBSCAN anomaly).',
+    atmospheric: 'Auto selects highest ridge with best sky visibility (exosphere science prime target).',
+};
+
+function updateTargetHint() {
+    const mt = missionTypeSelect.value;
+    targetAutoText.textContent = TARGET_AUTO_HINTS[mt] || 'Auto selects mission-optimal science target.';
+}
+
+function updateTargetMode() {
+    if (targetMode.value === 'custom') {
+        targetCustomInputs.classList.remove('hidden');
+        targetAutoHint.classList.add('hidden');
+    } else {
+        targetCustomInputs.classList.add('hidden');
+        targetAutoHint.classList.remove('hidden');
+    }
+    updateTargetHint();
+}
+
+targetMode.addEventListener('change', updateTargetMode);
+missionTypeSelect.addEventListener('change', updateTargetHint);
+updateTargetMode(); // init
+
+// ---------------------------------------------------------------------------
+// Plotly helper
+// ---------------------------------------------------------------------------
+function renderPlotly(containerId, html, minHeight) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.style.width = '100%';
+    iframe.style.border = 'none';
+    iframe.style.minHeight = minHeight;
+    iframe.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+                  + '<body style="margin:0;background:transparent">'
+                  + html + '</body></html>';
+    iframe.onload = function() {
+        try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; }
+        catch(e) {}
+    };
+    container.appendChild(iframe);
+}
+
+// ---------------------------------------------------------------------------
+// Path stats card
+// ---------------------------------------------------------------------------
+function renderPathStats(ps) {
+    const grid = document.getElementById('path-stats-grid');
+    if (!ps || !ps.total_distance_km) {
+        grid.innerHTML = '<p style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim)">No path planned.</p>';
+        return;
+    }
+
+    const battPct  = ps.battery_pct_used  || 0;
+    const feasible = ps.battery_feasible !== false;
+    const risk     = ps.energy_risk || 'LOW';
+    const riskColor = risk === 'HIGH' ? 'danger' : risk === 'MODERATE' ? '' : 'ok';
+
+    const cells = [
+        { label: 'Distance',    value: ps.total_distance_km.toFixed(2) + ' km' },
+        { label: 'Est. Time',   value: ps.estimated_time_hrs.toFixed(1) + ' h' },
+        { label: 'Max Slope',   value: ps.max_slope_deg.toFixed(1) + '°' },
+        { label: 'Mean Slope',  value: ps.mean_slope_deg.toFixed(1) + '°' },
+        { label: 'Battery',     value: battPct.toFixed(0) + '%',
+          cls: feasible ? riskColor : 'danger' },
+        { label: 'Energy Used', value: (ps.total_energy_wh || 0).toFixed(0) + ' Wh' },
+        { label: 'Regen',       value: (ps.downhill_regen_wh || 0).toFixed(1) + ' Wh' },
+        { label: 'Waypoints',   value: ps.waypoint_count },
+    ];
+
+    grid.innerHTML = cells.map(c =>
+        `<div class="stat-cell ${c.cls || ''}">
+           <div class="stat-label">${c.label}</div>
+           <div class="stat-value">${c.value}</div>
+         </div>`
+    ).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Soft terrain bearing assessment card
+// ---------------------------------------------------------------------------
+function renderSoftTerrain(ps) {
+    const section = document.getElementById('soft-terrain-section');
+    const grid    = document.getElementById('soft-terrain-grid');
+    const msg     = document.getElementById('soft-terrain-msg');
+
+    if (!ps || ps.stuck_risk === undefined) {
+        section.classList.add('hidden');
+        return;
+    }
+    section.classList.remove('hidden');
+
+    const risk      = ps.stuck_risk || 'LOW';
+    const riskCls   = risk === 'HIGH' ? 'danger' : risk === 'MODERATE' ? '' : 'ok';
+    const pct       = (ps.soft_terrain_pct || 0).toFixed(1);
+    const maxRisk   = (ps.max_soft_risk   || 0).toFixed(2);
+
+    grid.innerHTML = [
+        { label: 'Soft Terrain Risk',  value: risk,       cls: riskCls },
+        { label: 'High-Risk Path %',   value: pct + '%',  cls: pct > 30 ? riskCls : '' },
+        { label: 'Max Risk Score',     value: maxRisk,    cls: '' },
+    ].map(c =>
+        `<div class="stat-cell ${c.cls || ''}">
+           <div class="stat-label">${c.label}</div>
+           <div class="stat-value">${c.value}</div>
+         </div>`
+    ).join('');
+
+    if (ps.soft_terrain_warning) {
+        msg.style.color = 'var(--danger, #e55)';
+        msg.textContent = `⚠ TERRAIN CAUTION: ${pct}% of traverse path crosses terrain with ` +
+            `elevated soft soil risk indicators (PSR-adjacent terrain, low DEM confidence, ` +
+            `uncertain slope). Wheel sinkage assessment requires ground-truth soil data. ` +
+            `Mission planners should review flagged segments before final approval. ` +
+            `Source: Heiken et al. 1991, Lunar Sourcebook.`;
+    } else {
+        msg.style.color = 'var(--ok-color, #3a3)';
+        msg.textContent = '✓ Terrain bearing capacity: LOW RISK along planned traverse corridor.';
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Recharge stops card
+// ---------------------------------------------------------------------------
+function renderRechargeStops(stops) {
+    const section = document.getElementById('recharge-section');
+    const list    = document.getElementById('recharge-stops-list');
+
+    if (!stops || stops.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+    section.classList.remove('hidden');
+
+    const rows = stops.map((s, i) => {
+        const infeasible = s.recharge_time_hrs === null || s.recharge_time_hrs === undefined;
+        const timeStr    = infeasible
+            ? 'NO VIABLE CHARGE'
+            : s.recharge_time_hrs.toFixed(2) + ' h';
+        const illumPct   = (s.illumination_frac * 100).toFixed(1);
+        const rowClass   = infeasible ? 'danger' : '';
+        const timeClass  = infeasible ? 'danger-text' : '';
+
+        return `<tr class="${rowClass}">
+            <td>${i + 1}</td>
+            <td>${s.lat.toFixed(3)}°</td>
+            <td>${s.lon.toFixed(3)}°</td>
+            <td>${illumPct}%</td>
+            <td>${s.P_charge_w.toFixed(1)} W</td>
+            <td>${s.net_charge_rate_wh_hr.toFixed(1)} Wh/h</td>
+            <td>${s.battery_at_stop_pct.toFixed(1)}%</td>
+            <td>${s.energy_gained_wh.toFixed(1)} Wh</td>
+            <td class="${timeClass}">${timeStr}</td>
+        </tr>`;
+    }).join('');
+
+    list.innerHTML = `
+        <div style="overflow-x:auto;">
+            <table class="sites-table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Lat</th><th>Lon</th>
+                        <th>Illumination</th><th>P_charge</th><th>Net Rate</th>
+                        <th>SoC @ Stop</th><th>Energy Gained</th><th>Est. Time</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);margin-top:0.5rem;">
+            Stop threshold: 20% SoC (NASA/TM-2022-217504 §4.3) · Resume at 80% (ESA ECSS-E-ST-20-08C §5.4.2) ·
+            Idle power: 25 W (ISRO Chandrayaan-3 Report 2023) ·
+            Illumination model: LOLA AVGVISIB scaled by lunar synodic day position
+            (Seidelmann 1992 · Seidelmann et al. 2007)
+        </p>`;
+}
+
+// ---------------------------------------------------------------------------
+// Main analysis runner
+// ---------------------------------------------------------------------------
+async function runAnalysis(payload) {
+    const status  = document.getElementById('form-status');
+    const runBtn  = document.getElementById('run-btn');
+    const demoBtn = document.getElementById('demo-btn');
+
+    const region  = demSelect.value;
+    const estTime = region === 'south_pole_87_90' ? '3–5 minutes' : '30–120 seconds';
+    status.className   = 'status-msg';
+    status.textContent = `Analysing terrain… this may take ${estTime} on first load.`;
+
+    runBtn.disabled  = true;
+    demoBtn.disabled = true;
+
+    try {
+        const resp = await fetch(payload === null ? '/demo' : '/analyze', {
+            method:  payload === null ? 'GET' : 'POST',
+            headers: payload === null ? {} : {'Content-Type': 'application/json'},
+            body:    payload === null ? undefined : JSON.stringify(payload),
+        });
+
+        const json = await resp.json();
+        if (!resp.ok) throw new Error(json.detail || `HTTP ${resp.status}`);
+
+        // Battery warning banner
+        const battWarn = document.getElementById('battery-warning');
+        const ps = json.path_stats || {};
+        if (ps.battery_feasible === false) {
+            battWarn.textContent = `⚠ Battery infeasible: path requires ${ps.battery_pct_used.toFixed(0)}% of battery capacity. Rover runs out of power mid-traverse.`;
+            battWarn.classList.remove('hidden');
+        } else {
+            battWarn.classList.add('hidden');
+        }
+
         // Mission summary
         document.getElementById('mission-summary').textContent = json.mission_summary;
+
+        // AOI active chip
+        const aoiChip = document.getElementById('aoi-active-chip');
+        if (json.aoi_bounds) {
+            const b = json.aoi_bounds;
+            aoiChip.textContent = `AOI: ${b.lat_min}° to ${b.lat_max}°S, ${b.lon_min}–${b.lon_max}°E`;
+            aoiChip.classList.remove('hidden');
+        } else {
+            aoiChip.classList.add('hidden');
+        }
+
+        // Target used chip
+        const destChip = document.getElementById('dest-used-chip');
+        if (json.dest_used) {
+            const nameStr = json.dest_used.name ? ` "${json.dest_used.name}"` : '';
+            destChip.textContent = `Target${nameStr}: ${json.dest_used.lat.toFixed(3)}°, ${json.dest_used.lon.toFixed(3)}°E`;
+            destChip.classList.remove('hidden');
+        } else {
+            destChip.classList.add('hidden');
+        }
+
+        // Path stats
+        renderPathStats(json.path_stats);
+
+        // Soft terrain bearing assessment
+        renderSoftTerrain(json.path_stats);
+
+        // Recharge stops
+        renderRechargeStops(json.recharge_stops || []);
 
         // Sites table
         const tbody = document.getElementById('sites-tbody');
@@ -146,6 +1110,9 @@ async function runAnalysis(payload) {
         for (const s of json.top_sites) {
             const tr = document.createElement('tr');
             if (s.rank === 1) tr.className = 'top-site';
+            const sunCell = s.sunlight_fraction != null
+                ? `${(s.sunlight_fraction * 100).toFixed(0)}%`
+                : '—';
             tr.innerHTML = `
                 <td>${s.rank}</td>
                 <td>${s.lat.toFixed(3)}°</td>
@@ -155,41 +1122,138 @@ async function runAnalysis(payload) {
                 <td>${s.safety_score.toFixed(3)}</td>
                 <td>${s.mission_score.toFixed(3)}</td>
                 <td>${s.final_score.toFixed(3)}</td>
+                <td>${sunCell}</td>
                 <td style="font-size:0.8rem;color:var(--text-dim)">${s.reasoning}</td>
             `;
             tbody.appendChild(tr);
         }
 
-        // Inject Plotly HTML fragments
-        document.getElementById('map-container').innerHTML = json.map_html;
-        document.getElementById('chart-container').innerHTML = json.chart_html;
+        // Plotly charts
+        renderPlotly('map-container', json.map_html, '920px');
+        renderPlotly('chart-container', json.chart_html, '480px');
 
         document.getElementById('results-area').classList.remove('hidden');
         document.getElementById('results-area').scrollIntoView({behavior: 'smooth'});
-
         status.textContent = 'Analysis complete.';
 
     } catch (err) {
-        status.className = 'status-msg error';
+        status.className   = 'status-msg error';
         status.textContent = 'Error: ' + err.message;
     } finally {
-        runBtn.disabled = false;
+        runBtn.disabled  = false;
         demoBtn.disabled = false;
     }
 }
 
+// ---------------------------------------------------------------------------
+// Form submission
+// ---------------------------------------------------------------------------
 document.getElementById('mission-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
+
+    // Resolve DEM region: use uploaded custom key if set, else dropdown value
+    const customKey = document.getElementById('dem-region-custom').value;
+    const demRegion = (demSelect.value === 'upload' && customKey)
+        ? customKey
+        : demSelect.value;
+
+    if (demSelect.value === 'upload' && !customKey) {
+        document.getElementById('form-status').className = 'status-msg error';
+        document.getElementById('form-status').textContent =
+            'Please upload a DEM file first.';
+        document.getElementById('form-status').classList.remove('hidden');
+        return;
+    }
+
+    const scienceSelect = document.getElementById('science-experiments-select');
+    const scienceExps   = scienceSelect
+        ? Array.from(scienceSelect.selectedOptions).map(o => o.value)
+        : [];
+
+    // abs_max_slope_deg validation
+    const maxSlope    = parseFloat(data.max_slope_deg) || 15;
+    const absMaxSlope = parseFloat(data.abs_max_slope_deg) || 25;
+    if (absMaxSlope < maxSlope) {
+        document.getElementById('form-status').className = 'status-msg error';
+        document.getElementById('form-status').textContent =
+            'Validation error: Abs Max Slope must be ≥ Max Slope.';
+        document.getElementById('form-status').classList.remove('hidden');
+        return;
+    }
+
+    // Solar + PSR enter = warning (solar rover cannot enter PSR indefinitely)
+    if (data.power_source === 'solar' && data.psr_intent === 'enter') {
+        document.getElementById('form-status').className = 'status-msg';
+        document.getElementById('form-status').textContent =
+            '⚠ Warning: solar rovers cannot sustain operations inside PSR. Consider RTG power or psr_intent=rim.';
+        document.getElementById('form-status').classList.remove('hidden');
+    }
+
     const payload = {
-        rover_name:        data.rover_name,
-        mission_type:      data.mission_type,
-        power_source:      data.power_source,
-        max_slope_deg:     parseFloat(data.max_slope_deg),
-        min_flat_radius_m: parseFloat(data.min_flat_radius_m),
-        speed_kmh:         parseFloat(data.speed_kmh),
-        priority:          parseFloat(data.priority),
+        rover_name:           data.rover_name           || 'Custom Rover',
+        mission_name:         data.mission_name         || 'Mission Alpha',
+        agency:               data.agency               || '',
+        mission_type:         data.mission_type,
+        power_source:         data.power_source,
+        max_slope_deg:        maxSlope,
+        abs_max_slope_deg:    absMaxSlope,
+        min_flat_radius_m:    parseFloat(data.min_flat_radius_m) || 300,
+        speed_kmh:            parseFloat(data.speed_kmh)         || 0.5,
+        priority:             parseFloat(data.priority)          || 0.3,
+        battery_wh:           parseFloat(data.battery_wh)        || 1000,
+        psr_intent:           data.psr_intent,
+        dem_region:           demRegion,
+        solar_panel_w:        parseFloat(data.solar_panel_w)     || 50.0,
+        mission_day:          parseFloat(data.mission_day)       || 7.4,
+        wheel_radius_m:       parseFloat(data.wheel_radius_m)    || 0.25,
+        rover_mass_kg:        parseFloat(data.rover_mass_kg)     || 150,
+        mission_duration_days: parseFloat(data.mission_duration_days) || 14,
+        science_experiments:  scienceExps,
+        n_results:            parseInt(data.n_results, 10)        || 3,
     };
+
+    // Focus area
+    if (document.getElementById('focus-enable').checked) {
+        const focusMode = document.querySelector('input[name="focus_mode"]:checked')?.value || 'rect';
+        if (focusMode === 'rect') {
+            const latMin = parseFloat(document.getElementById('focus-lat-min').value);
+            const latMax = parseFloat(document.getElementById('focus-lat-max').value);
+            if (!isNaN(latMin) && !isNaN(latMax)) {
+                if (latMin >= latMax) {
+                    document.getElementById('form-status').className = 'status-msg error';
+                    document.getElementById('form-status').textContent =
+                        'Focus area error: Lat Min must be less than Lat Max.';
+                    document.getElementById('form-status').classList.remove('hidden');
+                    return;
+                }
+                payload.focus_lat_min = latMin;
+                payload.focus_lat_max = latMax;
+            }
+        } else {
+            const cLat = parseFloat(document.getElementById('focus-center-lat').value);
+            const cLon = parseFloat(document.getElementById('focus-center-lon').value);
+            const rad  = parseFloat(document.getElementById('focus-radius-km').value);
+            if (!isNaN(cLat) && !isNaN(cLon) && !isNaN(rad)) {
+                payload.focus_center_lat = cLat;
+                payload.focus_center_lon = cLon;
+                payload.focus_radius_km  = rad;
+            }
+        }
+    }
+
+    // Custom target
+    if (document.getElementById('target-mode').value === 'custom') {
+        const tLat  = parseFloat(document.getElementById('target-lat').value);
+        const tLon  = parseFloat(document.getElementById('target-lon').value);
+        const tName = document.getElementById('target-name').value.trim();
+        if (!isNaN(tLat) && !isNaN(tLon)) {
+            payload.target_lat  = tLat;
+            payload.target_lon  = tLon;
+            if (tName) payload.target_name = tName;
+        }
+    }
+
     runAnalysis(payload);
 });
 

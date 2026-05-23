@@ -18,26 +18,31 @@ Key design decisions
 from __future__ import annotations
 
 import asyncio
+import json
 import shutil
 import uuid as _uuid_mod
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from pydantic import BaseModel, Field, validator
 from starlette.requests import Request
+from starlette.responses import Response
 
+from config import Config
 from core.terrain import (
-    UPLOAD_DIR,
     DEM_REGIONS,
     get_dem_region_info,
     load_terrain_by_region,
     latlon_to_pixel,
+    crop_region,
 )
 from core.landing_scorer import score_terrain
 from core.pathfinder import find_path, generate_waypoints
@@ -45,6 +50,46 @@ from core.visualizer import create_mission_map, create_score_chart
 from core.mission_advisor import generate_report
 from core.anomaly_detector import detect_anomalies
 from core.energy_model import find_recharge_stops
+
+# ---------------------------------------------------------------------------
+# Session management (itsdangerous signed cookies)
+# ---------------------------------------------------------------------------
+
+_serializer = URLSafeTimedSerializer(Config.SECRET_KEY)
+_SESSION_MAX_AGE = Config.SESSION_EXPIRE_HOURS * 3600   # seconds
+
+
+def _get_session_id(request: Request, response: Response) -> str:
+    """Extract or create a session ID from the signed 'anveshak_sid' cookie.
+
+    On first visit (or after expiry): generates a UUID4 hex, signs it with
+    itsdangerous, sets the cookie, and returns the plain ID.
+    On subsequent visits: verifies and returns the existing ID.
+    If the cookie is tampered / expired: rotates to a fresh session.
+    """
+    cookie = request.cookies.get("anveshak_sid")
+    if cookie:
+        try:
+            return _serializer.loads(cookie, max_age=_SESSION_MAX_AGE)
+        except (BadSignature, SignatureExpired):
+            pass  # tampered or expired — issue a fresh session below
+    sid = _uuid_mod.uuid4().hex
+    signed = _serializer.dumps(sid)
+    response.set_cookie(
+        "anveshak_sid", signed,
+        httponly=True,
+        max_age=_SESSION_MAX_AGE,
+        samesite="lax",
+    )
+    return sid
+
+
+def _session_dir(session_id: str) -> Path:
+    """Return (and create) the per-session upload directory."""
+    d = Config.UPLOAD_DIR / session_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
 
 # ---------------------------------------------------------------------------
 # Terrain cache:  region_key -> (elevation, slope, roughness, profile)
@@ -138,7 +183,7 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+Config.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +192,9 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 class RoverProfile(BaseModel):
     # Identity
-    rover_name: str = Field("Anveshak-1", description="Rover name (display only)")
+    rover_name:   str = Field("Anveshak-1",   description="Rover name (display only)")
+    mission_name: str = Field("Mission Alpha", description="Mission name (display only)")
+    agency:       str = Field("",             description="Space agency / operator")
 
     # Mission
     mission_type: str = Field(
@@ -166,6 +213,13 @@ class RoverProfile(BaseModel):
             "Maximum traversable slope in degrees. "
             "Pragyan (ISRO): 12°. VIPER (NASA): 20°. "
             "Source: ISRO mission spec / NASA VIPER Fact Sheet NF-2022-08-032-JSC."
+        )
+    )
+    abs_max_slope_deg: float = Field(
+        25.0, ge=1.0, le=45.0,
+        description=(
+            "Absolute hard-limit slope — terrain above this is always impassable. "
+            "Must be ≥ max_slope_deg. Default 25° provides a hazard buffer."
         )
     )
     min_flat_radius_m: float = Field(
@@ -288,10 +342,12 @@ class RoverProfile(BaseModel):
         default_factory=list,
         description=(
             "Science experiment IDs to guide path routing. "
-            "volatile_detection (Paige 2010), mineralogy (Pieters 2009), "
-            "thermal_environment (Vasavada 2012), geomorphology (Kreslavsky 2000), "
-            "regolith_mechanics (Bandfield 2011), space_weathering (Lucey 2000). "
-            "Empty list = slope-only routing (existing behaviour)."
+            "volatile_detection (Paige 2010), mineralogy (Spudis 2013 Mini-RF CPR), "
+            "thermal_environment (Mazarico 2011 illumination gradient), "
+            "geomorphology (Kreslavsky 2000 MAS fractal), "
+            "space_weathering (Kreslavsky 2000 freshness index). "
+            "Empty list = slope-only routing (existing behaviour). "
+            "Note: regolith_mechanics removed (May 2026 data-source upgrade)."
         )
     )
 
@@ -299,7 +355,9 @@ class RoverProfile(BaseModel):
     def _check_science_exp(cls, v: str) -> str:
         valid = {
             "volatile_detection", "mineralogy", "thermal_environment",
-            "geomorphology", "regolith_mechanics", "space_weathering",
+            "geomorphology", "space_weathering",
+            # NOTE: "regolith_mechanics" removed (data-source upgrade, May 2026);
+            # replaced by geomorphology (MAS fractal) + space_weathering (freshness_index).
         }
         if v not in valid:
             raise ValueError(f"Unknown science experiment: {v!r}. Valid: {sorted(valid)}")
@@ -318,6 +376,58 @@ class RoverProfile(BaseModel):
         14.0, ge=1.0, le=365.0,
         description="Planned mission duration in Earth days."
     )
+
+    # Number of top landing sites to return (1–10)
+    n_results: int = Field(
+        3, ge=1, le=10,
+        description="Number of top landing sites to return in results."
+    )
+
+    # Focus area — optional geographic sub-region to restrict analysis.
+    # Two specification modes (mutually exclusive):
+    #   Rectangular: provide focus_lat_min + focus_lat_max (full longitude range used).
+    #   Circular:    provide focus_center_lat + focus_center_lon + focus_radius_km.
+    focus_lat_min: Optional[float] = Field(
+        None, ge=-90.0, le=0.0,
+        description="Focus area south boundary in decimal degrees (e.g. -89.5)."
+    )
+    focus_lat_max: Optional[float] = Field(
+        None, ge=-90.0, le=0.0,
+        description="Focus area north boundary in decimal degrees (e.g. -80.0)."
+    )
+    focus_center_lat: Optional[float] = Field(
+        None, ge=-90.0, le=0.0,
+        description="Center latitude for circular focus area (decimal degrees)."
+    )
+    focus_center_lon: Optional[float] = Field(
+        None, ge=0.0, le=360.0,
+        description="Center longitude for circular focus area (°E, 0–360)."
+    )
+    focus_radius_km: Optional[float] = Field(
+        None, ge=1.0, le=2000.0,
+        description="Radius for circular focus area in km."
+    )
+
+    # Mission target — if provided, the A* planner routes toward this coordinate.
+    target_lat: Optional[float] = Field(
+        None, ge=-90.0, le=0.0,
+        description="Target latitude in decimal degrees."
+    )
+    target_lon: Optional[float] = Field(
+        None, ge=0.0, le=360.0,
+        description="Target longitude in °E (0–360)."
+    )
+    target_name: Optional[str] = Field(
+        None,
+        description="Named target (e.g. 'Shackleton Crater') — display only."
+    )
+
+    @validator("focus_lat_max", always=True)
+    def _check_focus_bounds(cls, v, values):
+        lat_min = values.get("focus_lat_min")
+        if lat_min is not None and v is not None and lat_min >= v:
+            raise ValueError("focus_lat_min must be less than focus_lat_max.")
+        return v
 
     @validator("psr_intent")
     def _check_psr(cls, v):
@@ -356,6 +466,12 @@ _ZERO_STATS: dict = {
     "battery_pct_used":  0.0,
     "energy_risk":       "LOW",
     "battery_feasible":  True,
+    # Soft terrain risk (added May 2026 data-source upgrade)
+    "mean_soft_risk":       0.0,
+    "max_soft_risk":        0.0,
+    "soft_terrain_pct":     0.0,
+    "stuck_risk":           "LOW",
+    "soft_terrain_warning": False,
 }
 
 
@@ -383,6 +499,42 @@ async def _run_analysis(rover: RoverProfile) -> dict:
         )
 
     elevation, slope, roughness, profile = _terrain_cache[region_key]
+
+    # Focus-area crop — converts focus spec to bounding box, then crops.
+    # Returns new arrays; never mutates the shared cache.
+    import math as _math  # noqa: PLC0415
+    _crop_bounds: tuple | None = None
+    _MOON_KM_PER_DEG = 2 * _math.pi * 1737.4 / 360.0  # ≈ 30.35 km/degree
+
+    if (rover.focus_center_lat is not None
+            and rover.focus_center_lon is not None
+            and rover.focus_radius_km is not None):
+        # Circular focus area → rectangular bounding box
+        _r = rover.focus_radius_km
+        _lat_d = _r / _MOON_KM_PER_DEG
+        _cos = abs(_math.cos(_math.radians(rover.focus_center_lat)))
+        _lon_d = _r / (_MOON_KM_PER_DEG * _cos) if _cos > 0.01 else 180.0
+        _crop_bounds = (
+            (rover.focus_center_lon - _lon_d) % 360.0,
+            (rover.focus_center_lon + _lon_d) % 360.0,
+            rover.focus_center_lat - _lat_d,
+            rover.focus_center_lat + _lat_d,
+        )
+    elif rover.focus_lat_min is not None and rover.focus_lat_max is not None:
+        # Rectangular (lat-only): full longitude range
+        _crop_bounds = (0.0, 360.0, rover.focus_lat_min, rover.focus_lat_max)
+
+    _focus_active = _crop_bounds is not None
+    if _focus_active:
+        _lon_min, _lon_max, _lat_min, _lat_max = _crop_bounds
+        elevation, slope, roughness, profile = crop_region(
+            elevation, slope, roughness, profile,
+            _lon_min, _lon_max, _lat_min, _lat_max,
+        )
+        # crop_region strips the stale lat-grid cache; recompute for the new extent.
+        from core.landing_scorer import _build_lat_grid  # noqa: PLC0415
+        profile = dict(profile)
+        profile["_lat_grid_cache"] = _build_lat_grid(profile)
 
     rover_dict = {
         "rover_name":           rover.rover_name,
@@ -441,6 +593,10 @@ async def _run_analysis(rover: RoverProfile) -> dict:
     if not top_sites:
         raise HTTPException(status_code=500, detail="No viable landing sites found.")
 
+    # Trim to requested number of results
+    n_req = getattr(rover, "n_results", 3)
+    top_sites = top_sites[:max(1, n_req)]
+
     # Inject sunlight_fraction into each site from the sunlight_map
     sunlight_map = profile.get("sunlight_map")
     for site in top_sites:
@@ -464,6 +620,11 @@ async def _run_analysis(rover: RoverProfile) -> dict:
         science_experiments=rover.science_experiments,
     )
 
+    # If the user supplied a target, prepend it so the planner tries it first.
+    if rover.target_lat is not None and rover.target_lon is not None:
+        dr, dc = latlon_to_pixel(rover.target_lon, rover.target_lat, profile)
+        waypoints = [(dr, dc)] + waypoints
+
     # Path planning
     path = None
     path_stats = None
@@ -477,7 +638,7 @@ async def _run_analysis(rover: RoverProfile) -> dict:
             print(f"[main] Attempting path to waypoint {i}: {candidate_goal}")
             path, path_stats = await asyncio.to_thread(
                 find_path, slope, start, candidate_goal, rover_dict, res_m, elevation,
-                science_map, mobility_risk_map,
+                science_map, mobility_risk_map, profile,
             )
             if path is not None:
                 print(f"[main] Path found to waypoint {i}.")
@@ -491,7 +652,7 @@ async def _run_analysis(rover: RoverProfile) -> dict:
                 print(f"[main] Fallback: trying path to site rank {site['rank']}")
                 path, path_stats = await asyncio.to_thread(
                     find_path, slope, start, fallback_goal, rover_dict, res_m, elevation,
-                    science_map, mobility_risk_map,
+                    science_map, mobility_risk_map, profile,
                 )
                 if path is not None:
                     print(f"[main] Fallback path found to site rank {site['rank']}.")
@@ -528,10 +689,21 @@ async def _run_analysis(rover: RoverProfile) -> dict:
     )
 
     # Visualisation
+    _aoi_bounds: dict | None = None
+    if _focus_active and _crop_bounds is not None:
+        _lon_min_v, _lon_max_v, _lat_min_v, _lat_max_v = _crop_bounds
+        _aoi_bounds = {
+            "lat_min": _lat_min_v, "lat_max": _lat_max_v,
+            "lon_min": _lon_min_v, "lon_max": _lon_max_v,
+        }
+    _dest_used = (
+        {"lat": rover.target_lat, "lon": rover.target_lon, "name": rover.target_name}
+        if rover.target_lat is not None else None
+    )
     map_html = await asyncio.to_thread(
         create_mission_map,
         elevation, slope, final_score, top_sites, path, path_stats, profile,
-        recharge_stops,
+        recharge_stops, _aoi_bounds, _dest_used,
     )
     chart_html = await asyncio.to_thread(create_score_chart, top_sites)
 
@@ -585,6 +757,8 @@ async def _run_analysis(rover: RoverProfile) -> dict:
         "mission_summary": mission_summary,
         "report":          report,
         "recharge_stops":  recharge_stops,
+        "aoi_bounds":      _aoi_bounds,
+        "dest_used":       _dest_used,
     })
 
 
@@ -595,6 +769,12 @@ async def _run_analysis(rover: RoverProfile) -> dict:
 @app.get("/", include_in_schema=False)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/setup", include_in_schema=False)
+async def setup(request: Request):
+    """Data source configuration page — choose DEM region and upload ancillary files."""
+    return templates.TemplateResponse("setup.html", {"request": request})
 
 
 @app.get("/health")
@@ -645,7 +825,7 @@ async def upload_dem(file: UploadFile = File(...)):
         )
 
     unique_name = f"{_uuid_mod.uuid4().hex}{suffix}"
-    dest = UPLOAD_DIR / unique_name
+    dest = Config.UPLOAD_DIR / unique_name
 
     # Stream to disk with size guard
     bytes_written = 0
@@ -727,6 +907,388 @@ async def upload_dem(file: UploadFile = File(...)):
     }
 
 
+# ---------------------------------------------------------------------------
+# Rover presets
+# ---------------------------------------------------------------------------
+
+_ROVER_PRESETS: list[dict] = [
+    {
+        "id": "pragyan", "name": "Pragyan (Chandrayaan-3)",
+        "agency": "ISRO", "flag": "🇮🇳",
+        "source": "ISRO CY3 Mission Document 2023",
+        "profile": {
+            "rover_name": "Pragyan", "mission_type": "geological",
+            "power_source": "solar", "max_slope_deg": 12.0,
+            "abs_max_slope_deg": 18.0, "speed_kmh": 0.1,
+            "battery_wh": 54.0, "solar_panel_w": 50.0,
+            "wheel_radius_m": 0.075, "rover_mass_kg": 26.0,
+            "wheel_width_m": 0.05, "n_wheels": 6,
+            "mission_duration_days": 14.0, "priority": 0.4,
+            "psr_intent": "avoid",
+            "science_experiments": ["geomorphology", "space_weathering"],
+        },
+    },
+    {
+        "id": "viper", "name": "VIPER (NASA)",
+        "agency": "NASA", "flag": "🇺🇸",
+        "source": "NASA NF-2022-08-032-JSC",
+        "profile": {
+            "rover_name": "VIPER", "mission_type": "water_ice",
+            "power_source": "solar", "max_slope_deg": 20.0,
+            "abs_max_slope_deg": 30.0, "speed_kmh": 0.8,
+            "battery_wh": 450.0, "solar_panel_w": 450.0,
+            "wheel_radius_m": 0.25, "rover_mass_kg": 430.0,
+            "wheel_width_m": 0.20, "n_wheels": 6,
+            "mission_duration_days": 100.0, "priority": 0.4,
+            "psr_intent": "rim",
+            "science_experiments": ["volatile_detection", "mineralogy"],
+        },
+    },
+    {
+        "id": "artemis_ltv", "name": "Artemis LTV (NASA)",
+        "agency": "NASA", "flag": "🇺🇸",
+        "source": "NASA Artemis III SDT 2020",
+        "profile": {
+            "rover_name": "Artemis LTV", "mission_type": "water_ice",
+            "power_source": "rtg", "max_slope_deg": 15.0,
+            "abs_max_slope_deg": 22.0, "speed_kmh": 1.5,
+            "battery_wh": 2000.0, "solar_panel_w": 0.0,
+            "wheel_radius_m": 0.40, "rover_mass_kg": 900.0,
+            "wheel_width_m": 0.30, "n_wheels": 6,
+            "mission_duration_days": 14.0, "priority": 0.3,
+            "psr_intent": "rim",
+            "science_experiments": ["volatile_detection", "geomorphology"],
+        },
+    },
+    {
+        "id": "change7", "name": "Chang'e-7 Rover (CNSA)",
+        "agency": "CNSA", "flag": "🇨🇳",
+        "source": "CNSA Chang'e-7 overview 2023",
+        "profile": {
+            "rover_name": "Chang'e-7 Rover", "mission_type": "water_ice",
+            "power_source": "solar", "max_slope_deg": 20.0,
+            "abs_max_slope_deg": 30.0, "speed_kmh": 0.5,
+            "battery_wh": 500.0, "solar_panel_w": 200.0,
+            "wheel_radius_m": 0.15, "rover_mass_kg": 140.0,
+            "wheel_width_m": 0.12, "n_wheels": 6,
+            "mission_duration_days": 90.0, "priority": 0.5,
+            "psr_intent": "rim",
+            "science_experiments": ["volatile_detection", "mineralogy"],
+        },
+    },
+    {
+        "id": "luna27", "name": "Luna-27 (Roscosmos)",
+        "agency": "Roscosmos", "flag": "🇷🇺",
+        "source": "Roscosmos Luna-27 concept 2023",
+        "profile": {
+            "rover_name": "Luna-27", "mission_type": "water_ice",
+            "power_source": "rtg", "max_slope_deg": 20.0,
+            "abs_max_slope_deg": 28.0, "speed_kmh": 0.3,
+            "battery_wh": 800.0, "solar_panel_w": 0.0,
+            "wheel_radius_m": 0.20, "rover_mass_kg": 200.0,
+            "wheel_width_m": 0.15, "n_wheels": 6,
+            "mission_duration_days": 180.0, "priority": 0.4,
+            "psr_intent": "enter",
+            "science_experiments": ["volatile_detection", "thermal_environment"],
+        },
+    },
+    {
+        "id": "custom", "name": "Custom Rover",
+        "agency": "", "flag": "🛸",
+        "source": "User defined",
+        "profile": {},
+    },
+]
+
+
+@app.get("/rover_presets")
+async def rover_presets():
+    """Return all supported rover preset profiles."""
+    return _ROVER_PRESETS
+
+
+# ---------------------------------------------------------------------------
+# Generic ancillary file upload endpoint
+# ---------------------------------------------------------------------------
+
+_VALID_FILE_TYPES = frozenset([
+    "dem", "psr", "illumination", "earth_visibility", "sky_visibility",
+    "minirf_cpr", "mas_57m", "mas_225m", "mas_560m", "hurst_exponent", "ldsm_err",
+])
+_ANCILLARY_ALLOWED_EXTS = frozenset([".tif", ".tiff", ".jp2", ".img", ".hgt"])
+_MAX_ANCILLARY_BYTES = Config.MAX_ANCILLARY_SIZE_MB * 1024 * 1024
+
+
+@app.post("/upload/{file_type}")
+async def upload_file(
+    file_type: str,
+    file: UploadFile = File(...),
+    response: Response = None,
+    session_id: str = Depends(_get_session_id),
+):
+    """Upload an ancillary raster file for the current session.
+
+    file_type must be one of: dem, psr, illumination, earth_visibility,
+    sky_visibility, minirf_cpr, mas_57m, mas_225m, mas_560m, hurst_exponent, ldsm_err.
+
+    Files are stored in uploads/<session_id>/<file_type><ext> and used
+    automatically when /analyze is called in the same session.
+    """
+    if file_type not in _VALID_FILE_TYPES:
+        raise HTTPException(
+            400,
+            f"Unknown file_type '{file_type}'. "
+            f"Valid values: {sorted(_VALID_FILE_TYPES)}."
+        )
+
+    max_bytes = (
+        Config.MAX_DEM_SIZE_MB * 1024 * 1024
+        if file_type == "dem"
+        else _MAX_ANCILLARY_BYTES
+    )
+    max_mb = max_bytes // (1024 * 1024)
+
+    suffix = Path(file.filename or "upload.tif").suffix.lower()
+    if suffix not in _ANCILLARY_ALLOWED_EXTS:
+        raise HTTPException(
+            400,
+            f"Extension '{suffix}' not supported. Accepted: {sorted(_ANCILLARY_ALLOWED_EXTS)}."
+        )
+
+    sess_dir = _session_dir(session_id)
+    dest = sess_dir / f"{file_type}{suffix}"
+
+    bytes_written = 0
+    try:
+        with open(dest, "wb") as out_f:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                bytes_written += len(chunk)
+                if bytes_written > max_bytes:
+                    out_f.close()
+                    dest.unlink(missing_ok=True)
+                    raise HTTPException(
+                        413,
+                        f"File too large ({bytes_written // (1024*1024)} MB). "
+                        f"Maximum for {file_type}: {max_mb} MB."
+                    )
+                out_f.write(chunk)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        dest.unlink(missing_ok=True)
+        raise HTTPException(500, f"Upload failed: {exc}")
+
+    # Quick rasterio validation
+    try:
+        import rasterio  # noqa: PLC0415
+        with rasterio.open(dest) as src:
+            native_res = abs(src.transform.a)
+            crs_str    = str(src.crs) if src.crs else "unknown"
+            bands      = src.count
+    except Exception as exc:
+        dest.unlink(missing_ok=True)
+        raise HTTPException(400, f"Cannot read file with rasterio: {exc}")
+
+    return {
+        "file_type":   file_type,
+        "filename":    dest.name,
+        "size_mb":     round(bytes_written / (1024 * 1024), 2),
+        "native_res_m": round(native_res, 2),
+        "bands":       bands,
+        "crs":         crs_str,
+        "session_id":  session_id,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Session status
+# ---------------------------------------------------------------------------
+
+@app.get("/session/status")
+async def session_status(
+    session_id: str = Depends(_get_session_id),
+    response: Response = None,
+):
+    """Report which ancillary files are available for the current session."""
+    sess_dir = _session_dir(session_id)
+    from core.terrain import get_bundled_path  # noqa: PLC0415
+
+    status: dict[str, dict] = {}
+    for key in _VALID_FILE_TYPES:
+        uploaded = next(
+            (f for f in sess_dir.iterdir()
+             if f.stem == key and f.suffix in _ANCILLARY_ALLOWED_EXTS),
+            None,
+        ) if sess_dir.exists() else None
+        bundled = get_bundled_path(key) if key != "dem" else None
+        status[key] = {
+            "uploaded": str(uploaded) if uploaded else None,
+            "bundled":  str(bundled)  if bundled  else None,
+            "available": uploaded is not None or bundled is not None,
+        }
+
+    # DEM: check cached regions
+    status["dem"]["cached_regions"] = list(_terrain_cache.keys())
+    ready = all(status[k]["available"] for k in ("dem",))   # dem is only hard requirement
+    return {"session_id": session_id, "ready": ready, "files": status}
+
+
+# ---------------------------------------------------------------------------
+# Data sources info
+# ---------------------------------------------------------------------------
+
+@app.get("/data_sources")
+async def data_sources():
+    """List all supported ancillary files with NASA download URLs and size hints."""
+    return {
+        "dem_regions": {
+            k: {
+                "label":       v["label"],
+                "coverage":    v["coverage"],
+                "size_mb":     v["size_mb"],
+                "citation":    v["citation"],
+                "nasa_url":    Config.NASA_DEM_URLS.get(k, {}).get("url"),
+                "cog_streaming": k in Config.NASA_DEM_URLS,
+            }
+            for k, v in DEM_REGIONS.items()
+        },
+        "ancillary": {
+            "psr": {
+                "description": "Permanently Shadowed Region mask (LPSR, Mazarico 2011)",
+                "bundled_file": Config.BUNDLED_FILES.get("psr"),
+                "nasa_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/JP2/LPSR_75S_120M_201608.JP2",
+                "size_mb": 12,
+            },
+            "illumination": {
+                "description": "Solar illumination fraction (AVGVISIB, Mazarico 2011)",
+                "bundled_file": Config.BUNDLED_FILES.get("illumination"),
+                "nasa_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/JP2/AVGVISIB_75S_120M_201608.JP2",
+                "size_mb": 12,
+            },
+            "earth_visibility": {
+                "description": "Earth visibility fraction (AVGVISIB_EARTH, Mazarico 2011)",
+                "bundled_file": Config.BUNDLED_FILES.get("earth_visibility"),
+                "size_mb": 12,
+            },
+            "sky_visibility": {
+                "description": "Sky visibility / horizon blockage (SKYV, Mazarico 2011)",
+                "bundled_file": Config.BUNDLED_FILES.get("sky_visibility"),
+                "size_mb": 15,
+            },
+            "minirf_cpr": {
+                "description": "Mini-RF Circular Polarisation Ratio (Spudis 2013, JGR)",
+                "bundled_file": None,
+                "nasa_url": "https://pds-geosciences.wustl.edu/lro/lro-l-mrflro-5-cdr-v1/",
+                "size_mb": 4200,
+                "warn": "4.2 GB global file — streaming loader used automatically.",
+            },
+            "mas_57m": {
+                "description": "Median Absolute Slope 57 m baseline (Kreslavsky 2000, JGR)",
+                "bundled_file": Config.BUNDLED_FILES.get("mas_57m"),
+                "size_mb": 50,
+            },
+            "mas_225m": {
+                "description": "Median Absolute Slope 225 m baseline",
+                "bundled_file": Config.BUNDLED_FILES.get("mas_225m"),
+                "size_mb": 50,
+            },
+            "mas_560m": {
+                "description": "Median Absolute Slope 560 m baseline",
+                "bundled_file": Config.BUNDLED_FILES.get("mas_560m"),
+                "size_mb": 50,
+            },
+            "hurst_exponent": {
+                "description": "LOLA Hurst Exponent (Kreslavsky 2000, JGR)",
+                "bundled_file": Config.BUNDLED_FILES.get("hurst_exponent"),
+                "size_mb": 50,
+            },
+            "ldsm_err": {
+                "description": "LOLA Slope Error (Barker 2023, NASA PGDA)",
+                "bundled_file": None,
+                "size_mb": 30,
+            },
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Export endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/export/json/{session_id}")
+async def export_json(session_id: str):
+    """Download the last analysis result for a session as JSON."""
+    result_file = Config.UPLOAD_DIR / session_id / "last_result.json"
+    if not result_file.exists():
+        raise HTTPException(404, "No analysis result found for this session. Run /analyze first.")
+    return StreamingResponse(
+        open(result_file, "rb"),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename=anveshak_{session_id[:8]}.json"},
+    )
+
+
+@app.get("/export/pdf/{session_id}")
+async def export_pdf(session_id: str):
+    """Generate and download a PDF mission report for a session."""
+    result_file = Config.UPLOAD_DIR / session_id / "last_result.json"
+    if not result_file.exists():
+        raise HTTPException(404, "No analysis result found for this session. Run /analyze first.")
+
+    try:
+        from reportlab.lib.pagesizes import A4  # noqa: PLC0415
+        from reportlab.lib.styles import getSampleStyleSheet  # noqa: PLC0415
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer  # noqa: PLC0415
+        from reportlab.lib.units import cm  # noqa: PLC0415
+        import io  # noqa: PLC0415
+    except ImportError:
+        raise HTTPException(
+            503,
+            "reportlab is not installed. Install it with: pip install reportlab>=4.0.0"
+        )
+
+    result = json.loads(result_file.read_text(encoding="utf-8"))
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        rightMargin=2 * cm, leftMargin=2 * cm,
+        topMargin=2 * cm, bottomMargin=2 * cm,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Anveshak — Lunar Mission Analysis Report", styles["Title"]))
+    story.append(Spacer(1, 0.4 * cm))
+
+    summary = result.get("mission_summary", "")
+    story.append(Paragraph(summary, styles["BodyText"]))
+    story.append(Spacer(1, 0.4 * cm))
+
+    report_text = result.get("report", "")
+    for line in report_text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            story.append(Spacer(1, 0.2 * cm))
+            continue
+        if stripped.startswith("##"):
+            story.append(Paragraph(stripped.lstrip("#").strip(), styles["Heading2"]))
+        elif stripped.startswith("#"):
+            story.append(Paragraph(stripped.lstrip("#").strip(), styles["Heading1"]))
+        else:
+            story.append(Paragraph(stripped, styles["BodyText"]))
+
+    doc.build(story)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=anveshak_{session_id[:8]}.pdf"},
+    )
+
+
 @app.get("/demo")
 async def demo():
     rover = RoverProfile(
@@ -751,11 +1313,28 @@ async def demo():
 
 
 @app.post("/analyze")
-async def analyze(rover: RoverProfile):
+async def analyze(
+    rover: RoverProfile,
+    request: Request,
+    response: Response,
+):
+    session_id = _get_session_id(request, response)
     try:
         result = await _run_analysis(rover)
     except HTTPException:
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+    # Persist result for export endpoints
+    try:
+        sess_dir = _session_dir(session_id)
+        result_path = sess_dir / "last_result.json"
+        result_path.write_text(
+            json.dumps(result, default=str, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass  # export failure is non-fatal
+
     return JSONResponse(content=result)

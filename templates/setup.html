@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Anveshak — Data Setup</title>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+  <style>
+    .setup-container { max-width: 780px; margin: 2rem auto; padding: 1rem; }
+    .setup-section   { background: var(--card-bg, #1a1f2e); border-radius: 10px;
+                        padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
+                        border: 1px solid var(--border, #2a3045); }
+    .setup-section h2 { margin: 0 0 1rem; font-size: 1.1rem; color: var(--accent, #4f9ef8); }
+    .dem-options { display: flex; flex-direction: column; gap: 0.7rem; }
+    .dem-option  { display: flex; align-items: flex-start; gap: 0.8rem;
+                   padding: 0.7rem 0.9rem; border-radius: 7px;
+                   border: 1.5px solid var(--border, #2a3045); cursor: pointer;
+                   transition: border-color 0.15s; }
+    .dem-option:hover { border-color: var(--accent, #4f9ef8); }
+    .dem-option.selected { border-color: var(--accent, #4f9ef8);
+                            background: rgba(79,158,248,0.07); }
+    .dem-option input[type=radio] { margin-top: 0.2rem; accent-color: var(--accent, #4f9ef8); }
+    .dem-option .dem-label { font-weight: 600; font-size: 0.92rem; }
+    .dem-option .dem-desc  { font-size: 0.8rem; color: var(--text-muted, #8899aa);
+                              margin-top: 0.2rem; }
+    .dem-option .dem-badge { font-size: 0.72rem; padding: 0.2rem 0.5rem;
+                              border-radius: 4px; background: var(--badge-bg, #242d42);
+                              color: var(--text-muted, #8899aa); margin-top: 0.3rem;
+                              display: inline-block; }
+    .dem-badge.warn { background: rgba(255,180,0,0.15); color: #ffb400; }
+
+    .anc-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                  gap: 0.8rem; }
+    .anc-card  { padding: 0.8rem 1rem; border-radius: 8px;
+                  border: 1px solid var(--border, #2a3045); }
+    .anc-card .anc-name   { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .anc-card .anc-status { font-size: 0.75rem; margin-bottom: 0.5rem; }
+    .anc-card .anc-status.ok      { color: #4caf50; }
+    .anc-card .anc-status.missing { color: var(--text-muted, #8899aa); }
+    .anc-card input[type=file] { font-size: 0.75rem; width: 100%; }
+
+    .start-btn { display: block; width: 100%; padding: 0.9rem; font-size: 1rem;
+                  font-weight: 700; border-radius: 8px; border: none; cursor: pointer;
+                  background: linear-gradient(135deg, #4f9ef8, #2563eb);
+                  color: #fff; margin-top: 0.5rem; transition: opacity 0.15s; }
+    .start-btn:hover { opacity: 0.9; }
+    .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .status-bar { padding: 0.6rem 1rem; border-radius: 7px; font-size: 0.85rem;
+                   margin-bottom: 1rem; display: none; }
+    .status-bar.uploading { display: block; background: rgba(79,158,248,0.12);
+                             color: var(--accent, #4f9ef8); }
+    .status-bar.error     { display: block; background: rgba(239,68,68,0.12);
+                             color: #ef4444; }
+    .status-bar.success   { display: block; background: rgba(76,175,80,0.12);
+                             color: #4caf50; }
+  </style>
+</head>
+<body>
+<div class="setup-container">
+  <h1 style="margin-bottom:0.3rem">📡 Data Setup</h1>
+  <p style="color:var(--text-muted,#8899aa);margin-bottom:1.5rem;font-size:0.9rem">
+    Select a DEM region and optionally upload ancillary files. All ancillary files
+    are optional — bundled or synthetic proxies are used when absent.
+  </p>
+
+  <div id="status-bar" class="status-bar"></div>
+
+  <!-- DEM Region Selector -->
+  <div class="setup-section">
+    <h2>🗺 DEM Region</h2>
+    <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin-bottom:0.8rem">
+      Choose the lunar south-pole DEM to use. Larger areas load slower and need more RAM.
+      When local files are absent, the app streams from NASA servers.
+    </p>
+    <div class="dem-options" id="dem-options">
+      <!-- Populated by JS from /dem_regions -->
+      <div style="color:var(--text-muted,#8899aa);font-size:0.85rem">Loading regions…</div>
+    </div>
+  </div>
+
+  <!-- Ancillary File Upload -->
+  <div class="setup-section">
+    <h2>📁 Ancillary Files</h2>
+    <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin-bottom:0.8rem">
+      Optional science and illumination layers. Leave blank to use bundled files or
+      synthetic proxies.
+    </p>
+    <div class="anc-grid" id="anc-grid">
+      <!-- Populated by JS from /session/status -->
+      <div style="color:var(--text-muted,#8899aa);font-size:0.85rem">Checking status…</div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="window.location='/'">
+    Start Mission Planning →
+  </button>
+</div>
+
+<script>
+const ANC_LABELS = {
+  psr:              { label: 'PSR Mask',             desc: 'Permanently shadowed regions (LPSR)' },
+  illumination:     { label: 'Solar Illumination',   desc: 'Avg illumination fraction (AVGVISIB)' },
+  earth_visibility: { label: 'Earth Visibility',     desc: 'Earth-visibility fraction' },
+  sky_visibility:   { label: 'Sky Visibility',       desc: 'Horizon sky fraction (SKYV)' },
+  mas_57m:          { label: 'MAS 57 m',             desc: 'Median Absolute Slope 57 m baseline' },
+  mas_225m:         { label: 'MAS 225 m',            desc: 'Median Absolute Slope 225 m baseline' },
+  mas_560m:         { label: 'MAS 560 m',            desc: 'Median Absolute Slope 560 m baseline' },
+  hurst_exponent:   { label: 'Hurst Exponent',       desc: 'LOLA fractal roughness exponent' },
+  minirf_cpr:       { label: 'Mini-RF CPR',          desc: 'Circular Polarisation Ratio (~4 GB)' },
+  ldsm_err:         { label: 'Slope Error',          desc: 'LOLA DEM slope uncertainty' },
+};
+
+async function loadRegions() {
+  try {
+    const res = await fetch('/dem_regions');
+    const data = await res.json();
+    const container = document.getElementById('dem-options');
+    container.innerHTML = '';
+    Object.entries(data).forEach(([key, reg], idx) => {
+      const div = document.createElement('div');
+      div.className = 'dem-option' + (idx === 0 ? ' selected' : '');
+      div.innerHTML = `
+        <input type="radio" name="dem_region" value="${key}" ${idx === 0 ? 'checked' : ''}>
+        <div>
+          <div class="dem-label">${reg.label}</div>
+          <div class="dem-desc">${reg.description ? reg.description.substring(0,120) + '…' : ''}</div>
+          <span class="dem-badge ${reg.warn ? 'warn' : ''}">
+            ${reg.available ? '✅ on disk' : '☁ COG stream'} · ~${reg.peak_ram_mb} MB RAM
+            ${reg.warn ? ' · ⚠ ' + reg.warn.substring(0, 50) + '…' : ''}
+          </span>
+        </div>
+      `;
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.dem-option').forEach(d => d.classList.remove('selected'));
+        div.classList.add('selected');
+        div.querySelector('input').checked = true;
+        // Store selection for /analyze pre-fill
+        sessionStorage.setItem('dem_region', key);
+      });
+      container.appendChild(div);
+    });
+    if (Object.keys(data).length > 0) {
+      sessionStorage.setItem('dem_region', Object.keys(data)[0]);
+    }
+  } catch (e) {
+    console.error('Failed to load DEM regions', e);
+  }
+}
+
+async function loadStatus() {
+  try {
+    const res = await fetch('/session/status');
+    const data = await res.json();
+    const grid = document.getElementById('anc-grid');
+    grid.innerHTML = '';
+    const ancKeys = Object.keys(ANC_LABELS);
+    ancKeys.forEach(key => {
+      const info = ANC_LABELS[key];
+      const fileInfo = data.files[key] || {};
+      const available = fileInfo.available;
+      const card = document.createElement('div');
+      card.className = 'anc-card';
+      card.innerHTML = `
+        <div class="anc-name">${info.label}</div>
+        <div class="anc-status ${available ? 'ok' : 'missing'}">
+          ${available ? '✅ ' + (fileInfo.uploaded ? 'uploaded' : 'bundled') : '○ not available (proxy used)'}
+        </div>
+        <div class="anc-desc" style="font-size:0.72rem;color:var(--text-muted,#8899aa);margin-bottom:0.4rem">${info.desc}</div>
+        <input type="file" accept=".tif,.tiff,.jp2,.img"
+               onchange="uploadAncillary('${key}', this)">
+      `;
+      grid.appendChild(card);
+    });
+  } catch (e) {
+    document.getElementById('anc-grid').innerHTML =
+      '<div style="color:var(--text-muted,#8899aa);font-size:0.85rem">Could not load status.</div>';
+  }
+}
+
+async function uploadAncillary(fileType, input) {
+  if (!input.files.length) return;
+  const bar = document.getElementById('status-bar');
+  bar.className = 'status-bar uploading';
+  bar.textContent = `Uploading ${fileType}…`;
+
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  try {
+    const res = await fetch(`/upload/${fileType}`, { method: 'POST', body: fd });
+    if (res.ok) {
+      bar.className = 'status-bar success';
+      bar.textContent = `✅ ${fileType} uploaded successfully.`;
+      await loadStatus();
+    } else {
+      const err = await res.json();
+      bar.className = 'status-bar error';
+      bar.textContent = `❌ Upload failed: ${err.detail || res.statusText}`;
+    }
+  } catch (e) {
+    bar.className = 'status-bar error';
+    bar.textContent = `❌ Network error: ${e.message}`;
+  }
+  setTimeout(() => { if (bar.classList.contains('success')) bar.style.display = 'none'; }, 4000);
+}
+
+loadRegions();
+loadStatus();
+</script>
+</body>
+</html>

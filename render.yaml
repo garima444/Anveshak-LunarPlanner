@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: lunar-mission-planner
+    env: docker
+    plan: standard
+    healthCheckPath: /health
+
+    disk:
+      name: app-data
+      mountPath: /app/uploads
+      sizeGB: 5
+
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: DEMO_MODE
+        value: false
+      - key: SECRET_KEY
+        generateValue: true

@@ -7,6 +7,11 @@ data/
 !data/.gitkeep
 !data/dem/.gitkeep
 !data/results/.gitkeep
+!data/bundled/
+
+# --- Session uploads and temp files ---
+uploads/
+temp/
 
 # --- Trained ML model binaries ---
 models/*.pkl
