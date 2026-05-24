@@ -807,9 +807,12 @@ def load_terrain(
     if is_url:
         raw_ds = stream_from_url(str(dem_value), factor=factor, resampling=Resampling.average)
         if raw_ds is None:
+            # COG streaming is an optional enhancement — guide the user to upload manually.
+            download_url = file_map.get("_dem_download_url", str(dem_value))
             raise RuntimeError(
-                f"COG streaming failed for {dem_value}. "
-                "Check network access to NASA PGDA and GDAL libcurl support."
+                "Cannot stream from NASA directly. "
+                "Please download and upload the file manually. "
+                f"Download: {download_url}"
             )
     else:
         raw_ds = _load_jp2_downsampled(
@@ -1063,7 +1066,10 @@ def load_terrain_by_region(
         "_dn_scale":       reg["dn_scale"],
     }
 
-    # DEM: prefer local file; fall back to NASA COG streaming when absent.
+    # DEM: prefer local / uploaded file.
+    # COG streaming from NASA is an *optional* enhancement — attempted only when
+    # the file is absent and GDAL libcurl is available.  If streaming fails the
+    # caller receives a user-friendly error with the manual download URL.
     dem_p = reg["dem_path"]
     if dem_p.exists():
         file_map["dem"] = dem_p
@@ -1075,16 +1081,22 @@ def load_terrain_by_region(
             url_info = None
 
         if url_info:
+            download_url = url_info["url"]
             print(
                 f"[terrain] DEM not on disk ({dem_p.name}); "
-                f"will stream from NASA COG: {url_info['url']}"
+                f"attempting optional COG stream from NASA: {download_url}"
             )
-            file_map["dem"] = url_info["url"]
+            file_map["dem"] = download_url
+            # Saved so load_terrain() can embed it in the user-facing error message
+            # if /vsicurl/ streaming fails (no libcurl, firewall, etc.).
+            file_map["_dem_download_url"] = download_url
         else:
+            # No local file and no known NASA URL — tell user exactly where to get it.
+            citation = reg.get("citation", "LRO-L-LOLA-4-GDR-V1.0")
             raise FileNotFoundError(
-                f"DEM file not found for region '{region_key}': {dem_p}. "
-                f"Download from NASA PDS: https://pds.nasa.gov "
-                f"(data set LRO-L-LOLA-4-GDR-V1.0, {reg.get('citation', '')})."
+                f"DEM file not found: {dem_p.name}. "
+                f"Please download it from NASA PDS (dataset {citation}) "
+                f"and upload it via /setup → 'Upload DEM'."
             )
 
     # Count mask (optional — None for regions that don't have one)

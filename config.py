@@ -24,8 +24,11 @@ class Config:
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------ Size limits
-    MAX_DEM_SIZE_MB       = 500          # hard cap for /upload_dem streaming
-    MAX_ANCILLARY_SIZE_MB = 200          # hard cap for /upload/{file_type}
+    # DEM files can be 1–5 GB (LOLA 5 m/px GeoTIFF = ~3.3 GB compressed).
+    # Uploaded in 8 MB chunks to keep memory flat during transfer.
+    MAX_DEM_SIZE_MB       = 5120         # 5 GB hard cap for DEM uploads
+    MAX_ANCILLARY_SIZE_MB = 500          # 500 MB hard cap for ancillary layers
+    UPLOAD_CHUNK_SIZE     = 8 * 1024 * 1024  # 8 MB per chunk (throughput vs. memory)
 
     # ----------------------------------------------------------- Processing
     WORKING_RESOLUTION_M = 60

@@ -801,20 +801,22 @@ async def upload_dem(file: UploadFile = File(...)):
 
     Limits
     ------
-    * Max file size: 500 MB.  Files larger than this are rejected mid-stream.
+    * Max file size: 5 GB (Config.MAX_DEM_SIZE_MB).  Files are streamed in
+      8 MB chunks so memory usage stays flat regardless of file size.
     * Only files with georeference (CRS + affine) are accepted.
     * Integer-format DEMs are assumed to use LOLA 0.5 m/DN scaling.
     * Float32 DEMs are assumed to already be in metres.
 
-    Known problems with very large uploads
-    ---------------------------------------
-    1. No wavelet optimisation for GeoTIFF: GDAL reads the full file before
-       downsampling, so a 3 GB upload uses ~3 GB RAM during load.
-    2. Upload time: 500 MB at 10 MB/s = ~50 s. FastAPI streams in 1 MB chunks.
-    3. The server stores the file in data/uploaded/. Disk must have headroom.
+    Notes on large files (1–5 GB)
+    ------------------------------
+    1. The upload is chunked (8 MB/chunk) — no full-file buffering in RAM.
+    2. rasterio validation is a metadata-only probe; it does not read pixel data.
+    3. Disk on the server must have enough headroom for the file (5 GB on Render).
+    4. Typical upload time at 10 MB/s: 256 MB ≈ 26 s, 3.3 GB ≈ 5.5 min.
     """
-    _MAX_MB = 500
+    _MAX_MB    = Config.MAX_DEM_SIZE_MB          # 5 120 MB (5 GB)
     _MAX_BYTES = _MAX_MB * 1024 * 1024
+    _CHUNK     = Config.UPLOAD_CHUNK_SIZE         # 8 MB
     _ALLOWED_EXTS = {".tif", ".tiff", ".jp2", ".img", ".hgt"}
 
     suffix = Path(file.filename or "upload.tif").suffix.lower()
@@ -827,12 +829,12 @@ async def upload_dem(file: UploadFile = File(...)):
     unique_name = f"{_uuid_mod.uuid4().hex}{suffix}"
     dest = Config.UPLOAD_DIR / unique_name
 
-    # Stream to disk with size guard
+    # Stream to disk in fixed-size chunks — memory stays O(chunk) not O(file).
     bytes_written = 0
     try:
         with open(dest, "wb") as out_f:
             while True:
-                chunk = await file.read(1024 * 1024)   # 1 MB at a time
+                chunk = await file.read(_CHUNK)
                 if not chunk:
                     break
                 bytes_written += len(chunk)
@@ -841,8 +843,8 @@ async def upload_dem(file: UploadFile = File(...)):
                     dest.unlink(missing_ok=True)
                     raise HTTPException(
                         413,
-                        f"File too large ({bytes_written // (1024*1024)} MB). "
-                        f"Maximum upload size is {_MAX_MB} MB."
+                        f"File too large ({bytes_written // (1024*1024):,} MB). "
+                        f"Maximum DEM upload size is {_MAX_MB:,} MB (5 GB)."
                     )
                 out_f.write(chunk)
     except HTTPException:
@@ -1058,11 +1060,12 @@ async def upload_file(
     sess_dir = _session_dir(session_id)
     dest = sess_dir / f"{file_type}{suffix}"
 
+    # Stream in 8 MB chunks — keeps memory flat even for multi-GB DEM uploads.
     bytes_written = 0
     try:
         with open(dest, "wb") as out_f:
             while True:
-                chunk = await file.read(1024 * 1024)
+                chunk = await file.read(Config.UPLOAD_CHUNK_SIZE)
                 if not chunk:
                     break
                 bytes_written += len(chunk)
@@ -1071,8 +1074,8 @@ async def upload_file(
                     dest.unlink(missing_ok=True)
                     raise HTTPException(
                         413,
-                        f"File too large ({bytes_written // (1024*1024)} MB). "
-                        f"Maximum for {file_type}: {max_mb} MB."
+                        f"File too large ({bytes_written // (1024*1024):,} MB). "
+                        f"Maximum for {file_type}: {max_mb:,} MB."
                     )
                 out_f.write(chunk)
     except HTTPException:
@@ -1130,9 +1133,24 @@ async def session_status(
             "available": uploaded is not None or bundled is not None,
         }
 
-    # DEM: check cached regions
+    # DEM: annotate with cached regions and NASA download guidance.
+    # Primary path = user uploads the DEM; NASA streaming is an optional fallback.
     status["dem"]["cached_regions"] = list(_terrain_cache.keys())
-    ready = all(status[k]["available"] for k in ("dem",))   # dem is only hard requirement
+    status["dem"]["nasa_download_urls"] = {
+        k: v["url"] for k, v in Config.NASA_DEM_URLS.items()
+    }
+    status["dem"]["upload_note"] = (
+        "Upload the DEM file via the form below (up to 5 GB). "
+        "NASA COG streaming is attempted as an optional fallback when no file is uploaded, "
+        "but may fail if GDAL libcurl is unavailable. "
+        "Download links are provided above."
+    )
+    # A region counts as 'available' if it's already cached (previously loaded).
+    status["dem"]["available"] = (
+        status["dem"]["uploaded"] is not None
+        or bool(status["dem"]["cached_regions"])
+    )
+    ready = all(status[k]["available"] for k in ("dem",))   # dem is the only hard requirement
     return {"session_id": session_id, "ready": ready, "files": status}
 
 

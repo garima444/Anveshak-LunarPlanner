@@ -46,6 +46,12 @@
     .start-btn:hover { opacity: 0.9; }
     .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* DEM upload progress */
+    #dem-progress-bar { height: 4px; background: rgba(79,158,248,0.15);
+                         border-radius: 2px; margin-top: 0.5rem; overflow: hidden; }
+    #dem-progress-fill { height: 100%; width: 0%; background: #4f9ef8;
+                          transition: width 0.3s; border-radius: 2px; }
+
     .status-bar { padding: 0.6rem 1rem; border-radius: 7px; font-size: 0.85rem;
                    margin-bottom: 1rem; display: none; }
     .status-bar.uploading { display: block; background: rgba(79,158,248,0.12);
@@ -60,34 +66,71 @@
 <div class="setup-container">
   <h1 style="margin-bottom:0.3rem">📡 Data Setup</h1>
   <p style="color:var(--text-muted,#8899aa);margin-bottom:1.5rem;font-size:0.9rem">
-    Select a DEM region and optionally upload ancillary files. All ancillary files
-    are optional — bundled or synthetic proxies are used when absent.
+    Upload the DEM for your target region, then optionally add ancillary science layers.
   </p>
 
   <div id="status-bar" class="status-bar"></div>
 
-  <!-- DEM Region Selector -->
+  <!-- ── DEM Upload (primary) ── -->
   <div class="setup-section">
-    <h2>🗺 DEM Region</h2>
-    <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin-bottom:0.8rem">
-      Choose the lunar south-pole DEM to use. Larger areas load slower and need more RAM.
-      When local files are absent, the app streams from NASA servers.
+    <h2>🗺 DEM — Elevation Model</h2>
+
+    <!-- Step 1: pick region → shows download link -->
+    <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin:0 0 0.6rem">
+      <strong style="color:var(--text,#e0e6f0)">Step 1.</strong>
+      Select the region you need, then download the file from NASA.
     </p>
     <div class="dem-options" id="dem-options">
-      <!-- Populated by JS from /dem_regions -->
       <div style="color:var(--text-muted,#8899aa);font-size:0.85rem">Loading regions…</div>
     </div>
+
+    <!-- Download link box — shown after region selection -->
+    <div id="dem-download-box" style="display:none;margin-top:0.9rem;padding:0.75rem 1rem;
+         border-radius:7px;background:rgba(79,158,248,0.08);border:1px solid rgba(79,158,248,0.25)">
+      <div style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin-bottom:0.35rem">
+        📥 <strong style="color:var(--accent,#4f9ef8)">Download link</strong>
+        — right-click → Save As, or use <code>wget</code> / <code>curl</code>:
+      </div>
+      <a id="dem-download-link" href="#" target="_blank" rel="noopener"
+         style="font-size:0.8rem;word-break:break-all;color:#4f9ef8"></a>
+      <div id="dem-download-size" style="font-size:0.75rem;color:var(--text-muted,#8899aa);margin-top:0.25rem"></div>
+      <div style="font-size:0.75rem;color:var(--text-muted,#8899aa);margin-top:0.4rem;
+           padding:0.4rem 0.6rem;background:rgba(255,180,0,0.06);border-radius:4px;
+           border-left:2px solid #ffb400">
+        ⚠ COG streaming from NASA is attempted automatically as a fallback but may
+        fail in restricted environments. Uploading the file is always more reliable.
+      </div>
+    </div>
+
+    <!-- Step 2: upload the file -->
+    <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin:1rem 0 0.4rem">
+      <strong style="color:var(--text,#e0e6f0)">Step 2.</strong>
+      Upload the downloaded file (GeoTIFF / JP2 / .img — up to <strong>5 GB</strong>).
+    </p>
+    <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
+      <input type="file" id="dem-file-input" accept=".tif,.tiff,.jp2,.img,.hgt"
+             style="font-size:0.82rem;flex:1;min-width:200px"
+             onchange="uploadDem(this)">
+      <span id="dem-upload-status" style="font-size:0.8rem;color:var(--text-muted,#8899aa)"></span>
+    </div>
+    <div id="dem-progress-bar" style="display:none;height:4px;background:rgba(79,158,248,0.15);
+         border-radius:2px;margin-top:0.5rem;overflow:hidden">
+      <div id="dem-progress-fill" style="height:100%;width:0%;background:#4f9ef8;
+           transition:width 0.3s;border-radius:2px"></div>
+    </div>
+    <div id="dem-result" style="display:none;margin-top:0.6rem;font-size:0.78rem;
+         padding:0.5rem 0.7rem;border-radius:6px"></div>
   </div>
 
-  <!-- Ancillary File Upload -->
+  <!-- ── Ancillary Files (optional) ── -->
   <div class="setup-section">
-    <h2>📁 Ancillary Files</h2>
+    <h2>📁 Ancillary Layers <span style="font-size:0.72rem;font-weight:400;
+        color:var(--text-muted,#8899aa);margin-left:0.4rem">optional</span></h2>
     <p style="font-size:0.82rem;color:var(--text-muted,#8899aa);margin-bottom:0.8rem">
-      Optional science and illumination layers. Leave blank to use bundled files or
-      synthetic proxies.
+      Science and illumination layers. Leave blank — bundled files or synthetic
+      proxies are used when absent.
     </p>
     <div class="anc-grid" id="anc-grid">
-      <!-- Populated by JS from /session/status -->
       <div style="color:var(--text-muted,#8899aa);font-size:0.85rem">Checking status…</div>
     </div>
   </div>
@@ -111,22 +154,61 @@ const ANC_LABELS = {
   ldsm_err:         { label: 'Slope Error',          desc: 'LOLA DEM slope uncertainty' },
 };
 
+// Region metadata cache (populated by loadRegions)
+const _regionMeta = {};
+
+function updateDownloadBox(key) {
+  const meta = _regionMeta[key];
+  if (!meta) return;
+  const box   = document.getElementById('dem-download-box');
+  const link  = document.getElementById('dem-download-link');
+  const size  = document.getElementById('dem-download-size');
+  if (meta.nasa_url) {
+    box.style.display = 'block';
+    link.href        = meta.nasa_url;
+    link.textContent = meta.nasa_url;
+    size.textContent = meta.size_mb ? `File size: ~${meta.size_mb.toLocaleString()} MB` : '';
+  } else {
+    // No known NASA URL (e.g. 85S, 87S products) — hide the download box
+    box.style.display = 'none';
+  }
+}
+
 async function loadRegions() {
   try {
-    const res = await fetch('/dem_regions');
+    const res  = await fetch('/dem_regions');
     const data = await res.json();
+    // Also fetch data_sources for NASA download URLs
+    let nasaUrls = {};
+    try {
+      const ds = await fetch('/data_sources');
+      const dsData = await ds.json();
+      if (dsData.dem_regions) {
+        Object.entries(dsData.dem_regions).forEach(([k, v]) => {
+          nasaUrls[k] = v.nasa_url;
+        });
+      }
+    } catch (_) {}
+
     const container = document.getElementById('dem-options');
     container.innerHTML = '';
     Object.entries(data).forEach(([key, reg], idx) => {
+      _regionMeta[key] = { ...reg, nasa_url: nasaUrls[key] || null };
+
       const div = document.createElement('div');
       div.className = 'dem-option' + (idx === 0 ? ' selected' : '');
+      const diskBadge = reg.available
+        ? '<span style="color:#4caf50">✅ on disk</span>'
+        : nasaUrls[key]
+          ? '<span style="color:#ffb400">⬇ download required</span>'
+          : '<span style="color:var(--text-muted,#8899aa)">○ not available</span>';
       div.innerHTML = `
         <input type="radio" name="dem_region" value="${key}" ${idx === 0 ? 'checked' : ''}>
         <div>
           <div class="dem-label">${reg.label}</div>
           <div class="dem-desc">${reg.description ? reg.description.substring(0,120) + '…' : ''}</div>
           <span class="dem-badge ${reg.warn ? 'warn' : ''}">
-            ${reg.available ? '✅ on disk' : '☁ COG stream'} · ~${reg.peak_ram_mb} MB RAM
+            ${diskBadge} · ~${reg.peak_ram_mb} MB RAM · ~${reg.size_mb?.toLocaleString() || '?'} MB file
             ${reg.warn ? ' · ⚠ ' + reg.warn.substring(0, 50) + '…' : ''}
           </span>
         </div>
@@ -135,17 +217,93 @@ async function loadRegions() {
         document.querySelectorAll('.dem-option').forEach(d => d.classList.remove('selected'));
         div.classList.add('selected');
         div.querySelector('input').checked = true;
-        // Store selection for /analyze pre-fill
         sessionStorage.setItem('dem_region', key);
+        updateDownloadBox(key);
       });
       container.appendChild(div);
     });
-    if (Object.keys(data).length > 0) {
-      sessionStorage.setItem('dem_region', Object.keys(data)[0]);
+    const firstKey = Object.keys(data)[0];
+    if (firstKey) {
+      sessionStorage.setItem('dem_region', firstKey);
+      updateDownloadBox(firstKey);
     }
   } catch (e) {
     console.error('Failed to load DEM regions', e);
   }
+}
+
+// ── DEM upload (primary path) ──────────────────────────────────────────────
+async function uploadDem(input) {
+  if (!input.files.length) return;
+  const file  = input.files[0];
+  const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+  const status = document.getElementById('dem-upload-status');
+  const result = document.getElementById('dem-result');
+  const bar    = document.getElementById('dem-progress-bar');
+  const fill   = document.getElementById('dem-progress-fill');
+
+  status.textContent = `Uploading ${sizeMB} MB…`;
+  result.style.display = 'none';
+  bar.style.display = 'block';
+  fill.style.width  = '2%';
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  // Use XMLHttpRequest for progress tracking on large files
+  await new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload_dem');
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.max(2, Math.min(95, Math.round(e.loaded / e.total * 100)));
+        fill.style.width = pct + '%';
+        status.textContent = `Uploading… ${pct}% of ${sizeMB} MB`;
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      fill.style.width = '100%';
+      bar.style.display = 'none';
+      if (xhr.status >= 200 && xhr.status < 300) {
+        let info = {};
+        try { info = JSON.parse(xhr.responseText); } catch (_) {}
+        result.style.display = 'block';
+        result.style.background = 'rgba(76,175,80,0.10)';
+        result.style.border = '1px solid rgba(76,175,80,0.3)';
+        result.innerHTML =
+          `✅ <strong>DEM uploaded</strong> — ${(info.size_mb||0).toFixed(1)} MB · `
+          + `native ${info.native_res_m||'?'} m/px · `
+          + `working at ${info.working_res_m||'?'} m/px · `
+          + `CRS: ${info.crs||'unknown'}`
+          + (info.warn ? `<br><span style="color:#ffb400">⚠ ${info.warn}</span>` : '');
+        status.textContent = '✅ Upload complete';
+        sessionStorage.setItem('dem_region', 'custom:' + (info.filename || ''));
+      } else {
+        let errMsg = xhr.responseText;
+        try { errMsg = JSON.parse(xhr.responseText).detail || errMsg; } catch (_) {}
+        result.style.display = 'block';
+        result.style.background = 'rgba(239,68,68,0.10)';
+        result.style.border = '1px solid rgba(239,68,68,0.3)';
+        result.innerHTML = `❌ Upload failed: ${errMsg}`;
+        status.textContent = '❌ Failed';
+      }
+      resolve();
+    });
+
+    xhr.addEventListener('error', () => {
+      bar.style.display = 'none';
+      result.style.display = 'block';
+      result.style.background = 'rgba(239,68,68,0.10)';
+      result.style.border = '1px solid rgba(239,68,68,0.3)';
+      result.innerHTML = '❌ Network error during upload.';
+      status.textContent = '❌ Network error';
+      resolve();
+    });
+
+    xhr.send(fd);
+  });
 }
 
 async function loadStatus() {
