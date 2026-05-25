@@ -109,7 +109,7 @@ def _session_dir(session_id: str) -> Path:
 # Auth — sqlite3 + hashlib.sha256 (no external deps, B-tech level logic)
 # ---------------------------------------------------------------------------
 
-_DB_PATH = Path(__file__).parent / "users.db"
+_DB_PATH = Config.UPLOAD_DIR / "users.db"   # persistent disk — survives Render restarts
 
 
 def _init_db() -> None:
