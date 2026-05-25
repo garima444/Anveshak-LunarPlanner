@@ -1,3 +1,15 @@
+---
+title: Anveshak Lunar Mission Planner
+emoji: 🌙
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 8000
+pinned: false
+license: mit
+short_description: ML-based landing site selection for lunar south pole missions
+---
+
 # Anveshak — Lunar South Pole Mission Planner
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white)
