@@ -44,14 +44,14 @@ anveshak-env/
 *.ovr
 *.prj
 
-# --- Outputs: keep HTML, exclude images ---
+# --- Outputs: keep HTML (small ones), exclude images and large reports ---
 outputs/**/*.png
 outputs/**/*.jpg
 outputs/**/*.tif
 outputs/*.png
 outputs/*.jpg
 outputs/*.tif
-!outputs/*.html
+outputs/COMBINATIONS_REPORT.html
 
 # --- Generated report documents ---
 *.docx
