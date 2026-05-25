@@ -88,7 +88,11 @@
       "Bash(Start-Sleep -Seconds 60)",
       "Bash(Write-Host \"done waiting\")",
       "Read(//mnt/z/Anveshak/outputs/report_validation/logs/**)",
-      "Bash(powershell.exe -Command \"Get-Content 'Z:\\\\Anveshak\\\\outputs\\\\report_validation\\\\logs\\\\MASTER_LOG.txt' -Wait | Select-String -Pattern 'Result:|FINAL SUMMARY|PASS sections|FAIL sections|Chandrayaan|HTML report|Error|Traceback' --line-buffered\")"
+      "Bash(powershell.exe -Command \"Get-Content 'Z:\\\\Anveshak\\\\outputs\\\\report_validation\\\\logs\\\\MASTER_LOG.txt' -Wait | Select-String -Pattern 'Result:|FINAL SUMMARY|PASS sections|FAIL sections|Chandrayaan|HTML report|Error|Traceback' --line-buffered\")",
+      "Bash(git commit -m 'Production UI overhaul: landing page, auth, 2-col form, E2E verified *)",
+      "Bash(pip list *)",
+      "Bash(findstr -i \"docx\\\\|report\\\\|word\")",
+      "Bash(git *)"
     ]
   }
 }

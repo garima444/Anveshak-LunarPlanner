@@ -44,11 +44,19 @@ anveshak-env/
 *.ovr
 *.prj
 
-# --- Outputs: keep HTML, exclude PNG ---
+# --- Outputs: keep HTML, exclude images ---
+outputs/**/*.png
+outputs/**/*.jpg
+outputs/**/*.tif
 outputs/*.png
 outputs/*.jpg
 outputs/*.tif
 !outputs/*.html
+
+# --- Generated report documents ---
+*.docx
+*.pdf
+"Guideline of Report.docx"
 
 # --- Temporary / scratch files ---
 _tmp_*.py

@@ -1,0 +1,74 @@
+# ============================================================
+# Anveshak — Docker build exclusions
+# Mirrors .gitignore but tuned for Docker image size.
+# ============================================================
+
+# --- Large NASA data files (streamed from NASA COG URLs in production) ---
+data/
+
+# --- Session uploads and temp files ---
+uploads/
+temp/
+
+# --- User auth database (auto-created on startup) ---
+users.db
+
+# --- Outputs (generated at runtime, not needed in image) ---
+outputs/
+
+# --- Generated report documents ---
+*.docx
+*.pdf
+
+# --- Python bytecode ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# --- Conda / Python envs ---
+envs/
+conda-env/
+lunar-planner/
+anveshak-env/
+.conda/
+*.conda
+
+# --- Validation / test files (not needed at runtime) ---
+validation/
+tests/
+playwright_e2e/
+screenshots/
+
+# --- GDAL aux files ---
+*.aux
+*.aux.xml
+*.ovr
+
+# --- Temporary / scratch files ---
+_tmp_*.py
+*.tmp
+*.bak
+~$*
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Git / CI ---
+.git/
+.github/
+.pytest_cache/
+.mypy_cache/
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
