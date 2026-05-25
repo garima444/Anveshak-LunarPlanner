@@ -182,6 +182,23 @@ def _path_analysis(path_stats: dict | None, rover_profile: dict) -> str:
             f"Reduced traverse speed and increased wheel slip risk at this segment."
         )
 
+    # Soft terrain bearing assessment (PSR + data quality + slope error proxy).
+    # Source: Heiken et al. 1991, Lunar Sourcebook.
+    if path_stats.get("soft_terrain_warning"):
+        pct = path_stats.get("soft_terrain_pct", 0.0)
+        lines.append(
+            f"TERRAIN CAUTION: {pct:.0f}% of traverse path crosses terrain with "
+            f"elevated soft soil risk indicators (PSR-adjacent terrain, low DEM "
+            f"confidence, uncertain slope). Wheel sinkage assessment requires "
+            f"ground-truth soil data. Mission planners should review flagged path "
+            f"segments before final approval. "
+            f"Source: Heiken et al. 1991, Lunar Sourcebook."
+        )
+    else:
+        lines.append(
+            "Terrain bearing capacity: LOW RISK along planned traverse corridor."
+        )
+
     return " ".join(lines)
 
 

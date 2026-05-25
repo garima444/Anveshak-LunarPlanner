@@ -1,0 +1,45 @@
+{
+  "test_name": "Section 2: ML Classifier Accuracy",
+  "result": "PASS",
+  "notes": "Mean CV accuracy: 99.81% | 3/3 checks",
+  "passed": 3,
+  "total": 3,
+  "checks": [
+    {
+      "check": "score_terrain on synthetic",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "samples built",
+      "result": "PASS",
+      "value": "90000",
+      "expected": "> 100"
+    },
+    {
+      "check": "CV accuracy \u2265 75%",
+      "result": "PASS",
+      "value": "99.81%",
+      "expected": "\u2265 75%"
+    }
+  ],
+  "cv_data": {
+    "fold_accuracies": [
+      0.9982222222222222,
+      0.9977222222222222,
+      0.9982777777777778,
+      0.9983888888888889,
+      0.9980555555555556
+    ],
+    "mean_accuracy": 0.9981333333333333,
+    "std_accuracy": 0.00023200681130914174
+  },
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\02_classifier_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\02a_classifier_confusion_matrix.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\02b_classifier_accuracy_bar.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\02_classifier_accuracy.txt",
+  "_elapsed_s": 33.9
+}

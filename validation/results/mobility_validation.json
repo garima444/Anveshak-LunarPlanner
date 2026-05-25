@@ -1,0 +1,65 @@
+{
+  "test_name": "Bekker-Wong Terramechanics Validation",
+  "result": "PASS",
+  "sub_results": {
+    "12a": {
+      "sinkage_mm": 6.269,
+      "range": "2-15 mm",
+      "passed": true
+    },
+    "12b": {
+      "soft_indices": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "sinkage_mm": [
+        6.269,
+        6.826,
+        7.525,
+        8.437,
+        9.686,
+        11.531
+      ],
+      "monotone": true,
+      "passed": true
+    },
+    "12c": {
+      "mu_r_nominal": 0.07465,
+      "mu_r_soft": 0.09279,
+      "passed": true
+    },
+    "12d": {
+      "shape": [
+        100,
+        100
+      ],
+      "min": 0.05015,
+      "max": 0.0707,
+      "bounded": true,
+      "correct_shape": true,
+      "passed": true
+    },
+    "12e": {
+      "risk_flat_terrain": 0.05015,
+      "risk_in_depression": 0.0597,
+      "depression_riskier": true,
+      "passed": true
+    },
+    "12f": {
+      "pragyan_sinkage_mm": 3.575,
+      "viper_sinkage_mm": 6.269,
+      "passed": true
+    },
+    "12g": {
+      "STUCK_SINKAGE_FRACTION": 0.5,
+      "passed": true
+    }
+  },
+  "failures": [],
+  "n_pass": 7,
+  "n_total": 7
+}

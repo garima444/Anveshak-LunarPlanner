@@ -1,0 +1,5 @@
+{
+  "test_name": "Historical & Planned Lunar Mission Validation",
+  "result": "FAIL",
+  "notes": "Exception: cannot access local variable 'pct70_final' where it is not associated with a value\nTraceback (most recent call last):\n  File \"Z:\\Anveshak\\validation\\test_historical_missions.py\", line 864, in run\n    \"pct70_final_threshold\":   round(pct70_final, 6),\n                                     ^^^^^^^^^^^\nUnboundLocalError: cannot access local variable 'pct70_final' where it is not associated with a value\n"
+}

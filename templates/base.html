@@ -6,29 +6,45 @@
     <title>{% block title %}Anveshak{% endblock %} — Lunar South Pole Mission Planner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" />
     {% block head %}{% endblock %}
 </head>
 <body>
     <header>
-        <nav class="navbar">
-            <a href="/" class="nav-brand">🌑 Anveshak</a>
+        <nav class="navbar {% if navbar_mode == 'app' %}navbar--app{% endif %}">
+            <a href="/" class="nav-brand">🌙 Anveshak</a>
+
+            {% block nav_links %}
             <ul class="nav-links">
                 <li><a href="/">Home</a></li>
                 <li><a href="/docs" target="_blank">API Docs</a></li>
             </ul>
+            {% endblock %}
+
+            {% block nav_auth %}
+            <div class="nav-auth">
+                {% if user %}
+                <span class="user-chip">🏛️ {{ user.institute }}</span>
+                <a href="/logout" class="btn btn--outline btn--sm">Sign Out</a>
+                {% else %}
+                <a href="/login" class="btn btn--outline btn--sm">Sign In</a>
+                <a href="/signup" class="btn btn--primary btn--sm">Get Started →</a>
+                {% endif %}
+            </div>
+            {% endblock %}
         </nav>
     </header>
 
-    <main class="container">
+    <main {% block main_attrs %}class="container" style="padding-top:2rem;padding-bottom:3rem"{% endblock %}>
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>Anveshak v0.1.0 — Lunar South Pole Mission Planner &nbsp;|&nbsp;
-           Data: NASA LOLA DEM</p>
+    {% block footer %}
+    <footer class="footer-minimal">
+        <p>🌙 Anveshak v0.2.0 — Lunar South Pole Mission Planner &nbsp;|&nbsp; Data: NASA LOLA DEM</p>
     </footer>
+    {% endblock %}
 
     {% block scripts %}{% endblock %}
 </body>

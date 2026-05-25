@@ -1,0 +1,107 @@
+{
+  "test_name": "Section 7: Performance Benchmarks",
+  "result": "PASS",
+  "notes": "8/8 benchmarks within threshold",
+  "passed": 8,
+  "total": 8,
+  "checks": [
+    {
+      "check": "BM1 _synthetic_terrain",
+      "result": "PASS",
+      "value": "0.08s",
+      "expected": "< 120s"
+    },
+    {
+      "check": "BM2 score_terrain",
+      "result": "PASS",
+      "value": "0.44s",
+      "expected": "< 120s"
+    },
+    {
+      "check": "BM3 find_path",
+      "result": "PASS",
+      "value": "0.65s",
+      "expected": "< 60s"
+    },
+    {
+      "check": "BM3 path exists",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "BM4 detect_anomalies",
+      "result": "PASS",
+      "value": "1.18s",
+      "expected": "< 180s"
+    },
+    {
+      "check": "BM5 train_classifier",
+      "result": "PASS",
+      "value": "7.49s",
+      "expected": "< 240s"
+    },
+    {
+      "check": "BM6 classify_terrain",
+      "result": "PASS",
+      "value": "0.37s",
+      "expected": "< 120s"
+    },
+    {
+      "check": "BM7 generate_report",
+      "result": "PASS",
+      "value": "0.00s",
+      "expected": "< 5s"
+    }
+  ],
+  "benchmark_rows": [
+    [
+      "_synthetic_terrain(500\u00d7500)",
+      "0.08s",
+      "< 120s",
+      "\u2705 PASS"
+    ],
+    [
+      "score_terrain(300\u00d7300)",
+      "0.44s",
+      "< 120s",
+      "\u2705 PASS"
+    ],
+    [
+      "find_path(300\u00d7300)",
+      "0.65s",
+      "< 60s",
+      "\u2705 PASS"
+    ],
+    [
+      "detect_anomalies(300\u00d7300)",
+      "1.18s",
+      "< 180s",
+      "\u2705 PASS"
+    ],
+    [
+      "train_classifier(300\u00d7300)",
+      "7.49s",
+      "< 240s",
+      "\u2705 PASS"
+    ],
+    [
+      "classify_terrain(300\u00d7300)",
+      "0.37s",
+      "< 120s",
+      "\u2705 PASS"
+    ],
+    [
+      "generate_report()",
+      "0.00s",
+      "< 5s",
+      "\u2705 PASS"
+    ]
+  ],
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\07_performance_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\07_performance_benchmark_table.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\07_performance_benchmarks.txt",
+  "_elapsed_s": 11.59
+}

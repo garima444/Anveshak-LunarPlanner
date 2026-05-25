@@ -1,0 +1,68 @@
+{
+  "test_name": "Section 6: Science Routing Verification",
+  "result": "PASS",
+  "notes": "Science path mean value: 0.101 vs 0.100 (no-science) | Routing verified",
+  "passed": 8,
+  "total": 8,
+  "checks": [
+    {
+      "check": "empty_experiments \u2192 zeros",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "volatile_detection non-zero",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "volatile_detection range [0,1]",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "volatile_detection shape",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "mineralogy non-zero",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "science path has \u2265 science value",
+      "result": "PASS",
+      "value": "0.101",
+      "expected": "\u2265 0.100"
+    },
+    {
+      "check": "no-science path found",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "science path found",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    }
+  ],
+  "no_sci_mean_val": 0.0998,
+  "sci_mean_val": 0.1006,
+  "sci_routing_verified": true,
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\06_science_routing_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\06a_path_without_science.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\06b_path_with_science.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\06c_science_routing_comparison.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\06_science_routing.txt",
+  "_elapsed_s": 8.6
+}

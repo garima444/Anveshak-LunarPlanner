@@ -1,0 +1,36 @@
+{
+  "test_name": "Ancillary Layers Integrity",
+  "checks": {
+    "12a_illum_range": [
+      0.0,
+      0.9515
+    ],
+    "12a_illum_shape": [
+      10133,
+      10133
+    ],
+    "12a_coverage_frac": 1.0,
+    "12a_illumination": "PASS",
+    "12b_psr_shape": [
+      10133,
+      10133
+    ],
+    "12b_intermediate_frac": 0.0,
+    "12b_psr_coverage_frac": 0.0569,
+    "12b_psr_mask": "PASS",
+    "12c_earth_range": [
+      0.0,
+      1.0
+    ],
+    "12c_earth_visibility": "PASS",
+    "12d_psr_safety": "FAIL",
+    "12e_solar_rtg": "FAIL"
+  },
+  "warnings": [],
+  "failures": [
+    "12d: Unable to allocate 30.5 MiB for an array with shape (1000000, 1, 4) and data type float64",
+    "12e: Unable to allocate 30.5 MiB for an array with shape (1000000, 1, 4) and data type float64"
+  ],
+  "result": "FAIL",
+  "notes": "Sub-tests: 12a_illumination=PASS, 12b_psr_mask=PASS, 12c_earth_visibility=PASS, 12d_psr_safety=FAIL, 12e_solar_rtg=FAIL. Failures: ['12d: Unable to allocate 30.5 MiB for an array with shape (1000000, 1, 4) and data type float64', '12e: Unable to allocate 30.5 MiB for an array with shape (1000000, 1, 4) and data type float64']"
+}

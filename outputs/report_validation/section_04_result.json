@@ -1,0 +1,49 @@
+{
+  "test_name": "Section 4: LCROSS Ice Site Validation",
+  "result": "PASS",
+  "notes": "Cabeus PSR=1.00 | Science=84.8th pct | LCROSS_VALIDATED=True",
+  "passed": 5,
+  "total": 5,
+  "checks": [
+    {
+      "check": "LCROSS coords resolved",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "score_terrain succeeds",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "LCROSS PSR \u2265 0.5",
+      "result": "PASS",
+      "value": "1.000",
+      "expected": "\u2265 0.5"
+    },
+    {
+      "check": "LCROSS science \u2265 50th pct",
+      "result": "PASS",
+      "value": "84.8th",
+      "expected": "\u2265 50th"
+    },
+    {
+      "check": "volatile_detection \u2265 0.3",
+      "result": "PASS",
+      "value": "0.780",
+      "expected": "\u2265 0.3"
+    }
+  ],
+  "psr_val": 1.0,
+  "science_percentile": 84.8,
+  "lcross_validated": true,
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\04_lcross_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\04a_lcross_psr_map.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\04b_lcross_score_map.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\04_lcross_validation.txt",
+  "_elapsed_s": 63.62
+}

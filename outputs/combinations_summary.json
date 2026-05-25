@@ -1,0 +1,246 @@
+[
+  {
+    "id": "c1_water_ice_rtg_enter",
+    "label": "C1",
+    "rover_name": "RTG-Driller",
+    "mission_type": "water_ice",
+    "power_source": "rtg",
+    "psr_intent": "enter",
+    "preset": "viper",
+    "analogue": "Chang'e-7 ice-sampler concept",
+    "top_site_lat": -89.78318677021363,
+    "top_site_final": 0.9146230816841125,
+    "path_km": 8.291757569573589,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.9146",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top_site_polar_lat",
+        "result": "PASS",
+        "value": "-89.78\u00b0",
+        "expected": "< -84\u00b0S (polar water-ice zone)"
+      }
+    ]
+  },
+  {
+    "id": "c2_water_ice_rtg_rim",
+    "label": "C2",
+    "rover_name": "VIPER-Clone",
+    "mission_type": "water_ice",
+    "power_source": "rtg",
+    "psr_intent": "rim",
+    "preset": "viper",
+    "analogue": "NASA VIPER operational concept",
+    "top_site_lat": -89.78318677021363,
+    "top_site_final": 0.9146230816841125,
+    "path_km": 8.291757569573589,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.9146",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_psr_adjacent_5km",
+        "result": "PASS",
+        "value": "min_dist=0.22 km",
+        "expected": "<= 5 km from PSR (rim landing strategy)"
+      }
+    ]
+  },
+  {
+    "id": "c3_water_ice_solar_rim",
+    "label": "C3",
+    "rover_name": "Solar-Scout",
+    "mission_type": "water_ice",
+    "power_source": "solar",
+    "psr_intent": "rim",
+    "preset": "viper",
+    "analogue": "Solar PSR-rim rover",
+    "top_site_lat": -89.78318677021363,
+    "top_site_final": 0.9176671504974365,
+    "path_km": 9.055432893255057,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.9177",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "solar_no_sites_in_psr",
+        "result": "PASS",
+        "value": "0 top-10 sites inside PSR",
+        "expected": "0 (solar hard-zero: cannot land in PSR)"
+      }
+    ]
+  },
+  {
+    "id": "c4_water_ice_solar_avoid",
+    "label": "C4",
+    "rover_name": "Pragyan-II",
+    "mission_type": "water_ice",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "preset": "pragyan",
+    "analogue": "Solar rover avoiding shadow (Chandrayaan-3 class)",
+    "top_site_lat": -84.77371663429673,
+    "top_site_final": 0.8036189079284668,
+    "path_km": 16.701748904055805,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.8036",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_illumination_avoid",
+        "result": "PASS",
+        "value": "mean_illum=0.6697",
+        "expected": "> 0.40 (avoid mode: well-lit sites)"
+      }
+    ]
+  },
+  {
+    "id": "c5_geological_rtg_rim",
+    "label": "C5",
+    "rover_name": "Geo-RTG",
+    "mission_type": "geological",
+    "power_source": "rtg",
+    "psr_intent": "rim",
+    "preset": "yutu2",
+    "analogue": "RTG geology rover near PSR boundary",
+    "top_site_lat": -81.72048322328843,
+    "top_site_final": 0.8026900887489319,
+    "path_km": 5.706761902332482,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.8027",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_mission_score_geological",
+        "result": "PASS",
+        "value": "mean_mission_score=0.7564",
+        "expected": "> 0.60 (geological scorer assigned high diversity value to selected sites)"
+      }
+    ]
+  },
+  {
+    "id": "c6_geological_solar_avoid",
+    "label": "C6",
+    "rover_name": "Yutu-2-Clone",
+    "mission_type": "geological",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "preset": "yutu2",
+    "analogue": "Chang'e-4 type geology mission",
+    "top_site_lat": -81.72048322328843,
+    "top_site_final": 0.8026900887489319,
+    "path_km": 5.706761902332482,
+    "n_checks_pass": 3,
+    "n_checks_total": 3,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.8027",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_mission_score_geological",
+        "result": "PASS",
+        "value": "mean_mission_score=0.7564",
+        "expected": "> 0.60 (geological scorer assigned high diversity value to selected sites)"
+      },
+      {
+        "check": "top3_illumination_solar_geo",
+        "result": "PASS",
+        "value": "mean_illum=0.5498",
+        "expected": "> 0.35 (solar: needs illumination for power)"
+      }
+    ]
+  },
+  {
+    "id": "c7_atmospheric_rtg_avoid",
+    "label": "C7",
+    "rover_name": "Atmos-RTG",
+    "mission_type": "atmospheric",
+    "power_source": "rtg",
+    "psr_intent": "avoid",
+    "preset": "custom",
+    "analogue": "RTG exosphere / atmospheric science rover",
+    "top_site_lat": -82.88261549499049,
+    "top_site_final": 0.9535427093505859,
+    "path_km": 6.844995667241107,
+    "n_checks_pass": 2,
+    "n_checks_total": 2,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.9535",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_elevation_above_median",
+        "result": "PASS",
+        "value": "mean_elev=3856 m vs median=-1722 m",
+        "expected": "> DEM median elevation (ridge tops for sky visibility)"
+      }
+    ]
+  },
+  {
+    "id": "c8_atmospheric_solar_avoid",
+    "label": "C8",
+    "rover_name": "Atmos-Solar",
+    "mission_type": "atmospheric",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "preset": "custom",
+    "analogue": "Solar atmospheric science rover",
+    "top_site_lat": -82.88261549499049,
+    "top_site_final": 0.9535427093505859,
+    "path_km": 6.844995667241107,
+    "n_checks_pass": 3,
+    "n_checks_total": 3,
+    "checks": [
+      {
+        "check": "top_sites_exist",
+        "result": "PASS",
+        "value": "10 sites, top_score=0.9535",
+        "expected": ">= 1 site with final_score > 0"
+      },
+      {
+        "check": "top3_elevation_solar_atmos",
+        "result": "PASS",
+        "value": "mean_elev=3856 m vs median=-1722 m",
+        "expected": "> DEM median elevation"
+      },
+      {
+        "check": "top3_illumination_solar_atmos",
+        "result": "PASS",
+        "value": "mean_illum=0.5912",
+        "expected": "> 0.40 (solar atmospheric: lit ridges)"
+      }
+    ]
+  }
+]

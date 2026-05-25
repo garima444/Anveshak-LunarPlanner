@@ -1,0 +1,12 @@
+{
+  "test_name": "DBSCAN Parameter Validation \u2014 k-Distance Elbow Method",
+  "n_samples": 20000,
+  "current_eps": 0.18,
+  "suggested_eps": 0.184114,
+  "eps_difference": 0.004114,
+  "elbow_index": 1761,
+  "clusters_at_current_eps": 7,
+  "clusters_at_suggested_eps": 7,
+  "result": "PASS",
+  "notes": "|suggested_eps - current_eps| = 0.0041. Clusters: current=7, suggested=7."
+}

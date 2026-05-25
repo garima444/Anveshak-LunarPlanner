@@ -1,0 +1,32 @@
+{
+  "test_name": "Real DEM Terrain Sanity",
+  "checks": {
+    "dem_shape": [
+      10133,
+      10133
+    ],
+    "resolution_m": 60.0,
+    "total_pixels": 102677689,
+    "finite_pixels": 102672334,
+    "nan_fraction": 0.0001,
+    "13a_pct_below_35deg": 99.99,
+    "13a_slope_p50": 8.056,
+    "13a_slope_p95": 21.639,
+    "13a_slope_dist": "PASS",
+    "13b_roughness_slope_pearson_r": 0.6724,
+    "13b_roughness_slope_corr": "PASS",
+    "13c_elevation_min_m": -7296.5,
+    "13c_elevation_max_m": 7026.5,
+    "13c_elevation_mean_m": -1500.5,
+    "13c_elevation_range": "PASS",
+    "13d_nan_frac_pct": 0.01,
+    "13d_nan_fraction": "PASS",
+    "13e_isolated_nan_count": 4952,
+    "13e_isolated_nan_frac": 4.8e-05,
+    "13e_nan_islands": "PASS"
+  },
+  "warnings": [],
+  "failures": [],
+  "result": "PASS",
+  "notes": "DEM 10133\u00d710133 px @ 60m/px. 13a_slope_dist=PASS, 13b_roughness_slope_corr=PASS, 13c_elevation_range=PASS, 13d_nan_fraction=PASS, 13e_nan_islands=PASS"
+}

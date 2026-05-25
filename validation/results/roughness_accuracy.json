@@ -1,0 +1,63 @@
+{
+  "test_name": "Roughness Computation Accuracy",
+  "sub_results": {
+    "9a": {
+      "max_roughness_m": 0.0,
+      "tolerance_m": 0.01,
+      "result": "PASS",
+      "notes": "max_roughness=0.000000m, tolerance=0.01m"
+    },
+    "9b": {
+      "mean_interior_roughness_m": 49.6904,
+      "min_interior_roughness_m": 49.6904,
+      "max_interior_roughness_m": 49.6904,
+      "theoretical_std_m": 49.6904,
+      "expected_range_m": [
+        42.2,
+        57.1
+      ],
+      "roughness_window_size": 3,
+      "result": "PASS",
+      "notes": "mean_rough=49.6904m, expected in [42.2,57.1] (\u00b115% of theoretical 49.7m)"
+    },
+    "9c": {
+      "nan_pixels_have_nan_roughness": true,
+      "sample_far_pixel": [
+        0,
+        2
+      ],
+      "far_roughness_m": 0.0,
+      "far_pixel_near_zero": true,
+      "result": "PASS",
+      "notes": "NaN preserved=True, far_rough=0.0000m"
+    },
+    "9d": {
+      "patch_gradients": [
+        0.0,
+        0.05,
+        0.1,
+        0.15,
+        0.2
+      ],
+      "mean_slopes_deg": [
+        0.0,
+        2.8624,
+        5.7106,
+        8.5308,
+        11.3099
+      ],
+      "mean_roughness_m": [
+        0.0,
+        2.4495,
+        4.899,
+        7.3485,
+        9.798
+      ],
+      "pearson_r": 1.0,
+      "result": "PASS",
+      "notes": "Pearson r=1.0000 between mean slope and mean roughness across 5 patches (expected >= 0.80)"
+    }
+  },
+  "result": "PASS",
+  "notes": "Sub-tests: 9a=PASS, 9b=PASS, 9c=PASS, 9d=PASS"
+}

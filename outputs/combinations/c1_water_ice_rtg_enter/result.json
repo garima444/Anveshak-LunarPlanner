@@ -1,0 +1,114 @@
+{
+  "combination": "c1_water_ice_rtg_enter",
+  "label": "C1",
+  "rover_name": "RTG-Driller",
+  "mission_type": "water_ice",
+  "power_source": "rtg",
+  "psr_intent": "enter",
+  "preset": "viper",
+  "analogue": "Chang'e-7 ice-sampler concept",
+  "safety_at_top1": 0.7942,
+  "top_sites": [
+    {
+      "rank": 1,
+      "pixel_row": 5166,
+      "pixel_col": 5021,
+      "lon": -155.65701955024147,
+      "lat": -89.78318677021363,
+      "elevation_m": 1735.5,
+      "slope_deg": 0.5338065028190613,
+      "roughness_m": 1.8027756214141846,
+      "safety_score": 0.7941678166389465,
+      "mission_score": 0.9949265718460083,
+      "final_score": 0.9146230816841125,
+      "reasoning": "Near-polar location (-89.78\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.99)."
+    },
+    {
+      "rank": 2,
+      "pixel_row": 5259,
+      "pixel_col": 4895,
+      "lon": -138.4064437549947,
+      "lat": -89.48981745837385,
+      "elevation_m": 1928.5,
+      "slope_deg": 0.7161599397659302,
+      "roughness_m": 0.7071067690849304,
+      "safety_score": 0.8245135545730591,
+      "mission_score": 0.9595675468444824,
+      "final_score": 0.9055460095405579,
+      "reasoning": "Near-polar location (-89.49\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.96)."
+    },
+    {
+      "rank": 3,
+      "pixel_row": 5208,
+      "pixel_col": 4697,
+      "lon": -111.01670771758693,
+      "lat": -89.21749577303368,
+      "elevation_m": 1453.0,
+      "slope_deg": 0.8606972694396973,
+      "roughness_m": 1.1180340051651,
+      "safety_score": 0.8082732558250427,
+      "mission_score": 0.9647694230079651,
+      "final_score": 0.9021709561347961,
+      "reasoning": "Near-polar location (-89.22\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.96)."
+    },
+    {
+      "rank": 4,
+      "pixel_row": 5107,
+      "pixel_col": 4567,
+      "lon": -94.67655407302735,
+      "lat": -89.00903785084759,
+      "elevation_m": 1553.5,
+      "slope_deg": 0.7161599397659302,
+      "roughness_m": 1.1180340051651,
+      "safety_score": 0.811530590057373,
+      "mission_score": 0.9625051021575928,
+      "final_score": 0.9021153450012207,
+      "reasoning": "Near-polar location (-89.01\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.96)."
+    },
+    {
+      "rank": 5,
+      "pixel_row": 4771,
+      "pixel_col": 4310,
+      "lon": -68.67700909345842,
+      "lat": -88.39394972947771,
+      "elevation_m": 1514.5,
+      "slope_deg": 1.8639020919799805,
+      "roughness_m": 1.2247449159622192,
+      "safety_score": 0.8019621968269348,
+      "mission_score": 0.9663244485855103,
+      "final_score": 0.900579571723938,
+      "reasoning": "Balanced safety (0.80) and science (0.97) score at -88.39\u00b0S, -68.68\u00b0E."
+    }
+  ],
+  "path_stats": {
+    "total_distance_m": 8291.757569573589,
+    "total_distance_km": 8.291757569573589,
+    "max_slope_deg": 10.349406242370605,
+    "mean_slope_deg": 4.183941848832985,
+    "estimated_time_hrs": 13.819595949289315,
+    "waypoint_count": 116,
+    "total_energy_wh": 1372.7783,
+    "uphill_energy_wh": 202.2157,
+    "downhill_regen_wh": 28.2599,
+    "energy_per_km": 165.5594,
+    "battery_pct_used": 305.0618,
+    "energy_risk": "HIGH",
+    "battery_feasible": false
+  },
+  "checks": [
+    {
+      "check": "top_sites_exist",
+      "result": "PASS",
+      "value": "10 sites, top_score=0.9146",
+      "expected": ">= 1 site with final_score > 0"
+    },
+    {
+      "check": "top_site_polar_lat",
+      "result": "PASS",
+      "value": "-89.78\u00b0",
+      "expected": "< -84\u00b0S (polar water-ice zone)"
+    }
+  ],
+  "n_checks_pass": 2,
+  "n_checks_total": 2
+}

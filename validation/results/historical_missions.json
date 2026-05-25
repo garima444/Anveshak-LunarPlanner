@@ -1,0 +1,129 @@
+{
+  "test_name": "Historical & Planned Lunar Mission Validation",
+  "result": "WARN",
+  "missions": [
+    {
+      "name": "VIPER",
+      "agency": "NASA",
+      "year": 2024,
+      "status_field": "cancelled",
+      "psr_required": true,
+      "start_pixel": [
+        7770,
+        4413
+      ],
+      "goal_pixel": [
+        7574,
+        4460
+      ],
+      "path_status": "FOUND",
+      "published_traverse_km": 20.0,
+      "computed_km": 13.501,
+      "time_hrs": 16.877,
+      "max_slope_deg": 9.06,
+      "mean_slope_deg": 4.29,
+      "energy_wh": 1710.7,
+      "battery_pct_used": 380.15,
+      "energy_risk": "HIGH",
+      "battery_feasible": false,
+      "DISTANCE_VALIDATED": false,
+      "PSR_TARGET_CONFIRMED": false,
+      "MISSION_VALIDATED": false,
+      "landing_final_score": null,
+      "landing_percentile": null,
+      "LANDING_SITE_PREDICTED": null,
+      "dest_mission_score": null,
+      "dest_percentile": null,
+      "DESTINATION_PREDICTED": null,
+      "SITE_PREDICTION_VALIDATED": null
+    },
+    {
+      "name": "Chang'e-7",
+      "agency": "CNSA",
+      "year": 2026,
+      "status_field": "planned",
+      "psr_required": true,
+      "start_pixel": [
+        4056,
+        5067
+      ],
+      "goal_pixel": [
+        4055,
+        5067
+      ],
+      "path_status": "FOUND",
+      "published_traverse_km": null,
+      "computed_km": 0.06,
+      "time_hrs": 0.12,
+      "max_slope_deg": 15.37,
+      "mean_slope_deg": 15.29,
+      "energy_wh": 11.06,
+      "battery_pct_used": 2.21,
+      "energy_risk": "LOW",
+      "battery_feasible": true,
+      "DISTANCE_VALIDATED": null,
+      "PSR_TARGET_CONFIRMED": true,
+      "MISSION_VALIDATED": true,
+      "landing_final_score": null,
+      "landing_percentile": null,
+      "LANDING_SITE_PREDICTED": null,
+      "dest_mission_score": null,
+      "dest_percentile": null,
+      "DESTINATION_PREDICTED": null,
+      "SITE_PREDICTION_VALIDATED": null
+    },
+    {
+      "name": "Artemis III",
+      "agency": "NASA",
+      "year": 2026,
+      "status_field": "planned",
+      "psr_required": false,
+      "start_pixel": [
+        4814,
+        5067
+      ],
+      "goal_pixel": [
+        4763,
+        5067
+      ],
+      "path_status": "FOUND",
+      "published_traverse_km": 5.0,
+      "computed_km": 3.507,
+      "time_hrs": 2.338,
+      "max_slope_deg": 14.59,
+      "mean_slope_deg": 9.16,
+      "energy_wh": 236.56,
+      "battery_pct_used": 11.83,
+      "energy_risk": "LOW",
+      "battery_feasible": true,
+      "DISTANCE_VALIDATED": true,
+      "PSR_TARGET_CONFIRMED": null,
+      "MISSION_VALIDATED": true,
+      "landing_final_score": null,
+      "landing_percentile": null,
+      "LANDING_SITE_PREDICTED": null,
+      "dest_mission_score": null,
+      "dest_percentile": null,
+      "DESTINATION_PREDICTED": null,
+      "SITE_PREDICTION_VALIDATED": null
+    }
+  ],
+  "n_missions_validated": 2,
+  "n_predictions_validated": 0,
+  "landmarks": {
+    "LCROSS_Cabeus": {
+      "pixel": [
+        3298,
+        3053
+      ],
+      "in_bounds": true,
+      "LCROSS_VALIDATED": null,
+      "note": "Part 2 score_terrain not available (OOM) \u2014 landmark check skipped."
+    }
+  },
+  "lcross_validated": false,
+  "pct70_final_threshold": 1.0,
+  "pct70_mission_threshold": 1.0,
+  "html_output": "Z:\\Anveshak\\outputs\\historical_mission_validation.html",
+  "notes": "2/3 missions MISSION_VALIDATED (traverse distance within 30% of published + goal in confirmed PSR >= 70%). Site prediction skipped (OOM on full DEM). Site prediction skipped: out-of-memory during score_terrain (Unable to allocate 392. MiB for an array with shape (10133, 10133) and data type float32). The Random Forest classifier requires ~155 MB for the 10133\u00d710133 DEM \u2014 increase system RAM or run on a downsampled DEM to enable this test. LCROSS Cabeus landmark: NOT VALIDATED. Verdict: WARN."
+}

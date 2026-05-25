@@ -1,0 +1,57 @@
+{
+  "test_name": "A* Pathfinder Validation",
+  "sub_results": {
+    "6a": {
+      "path_length": 33,
+      "all_in_bounds": true,
+      "all_passable": true,
+      "result": "PASS",
+      "notes": "len=33, all_in_bounds=True, all_passable=True"
+    },
+    "6b": {
+      "path_is_none": true,
+      "stats_is_none": true,
+      "result": "PASS",
+      "notes": "path=None, stats=None"
+    },
+    "6c": {
+      "path_returned": true,
+      "total_distance_m": 0.0,
+      "result": "PASS",
+      "notes": "No crash, distance=0.00m"
+    },
+    "6d": {
+      "total_distance_m": 8400.43,
+      "expected_distance_m": 8400.43,
+      "pct_error": 0.0,
+      "estimated_time_hrs": 16.8009,
+      "max_slope_deg": 5.0,
+      "mean_slope_deg": 5.0,
+      "result": "PASS",
+      "notes": "dist=8400.4m, expected\u22488400.4m, err=0.00%"
+    },
+    "6e": {
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "total_distance_m": 169.7056,
+      "expected_distance_m": 169.7056,
+      "pct_error": 0.0,
+      "result": "PASS",
+      "notes": "dist=169.7056m, expected=169.7056m, err=0.0000%"
+    }
+  },
+  "result": "PASS",
+  "notes": "Sub-tests: 6a=PASS, 6b=PASS, 6c=PASS, 6d=PASS, 6e=PASS"
+}

@@ -1,0 +1,125 @@
+Using test email: demo_59128@iitb.ac.in
+
+=== 1. Landing page ===
+  [screenshot] 01_landing_hero.png  (367 KB)
+  [screenshot] 01_landing_full.png  (455 KB)
+
+=== 2. Features section ===
+  [screenshot] 02_features.png  (121 KB)
+
+=== 3. How It Works ===
+  [screenshot] 03_how_it_works.png  (147 KB)
+
+=== 4. About section ===
+  [screenshot] 04_about.png  (217 KB)
+
+=== 5. Contact section ===
+  [screenshot] 05_contact.png  (65 KB)
+
+=== 6. Footer ===
+  [screenshot] 06_footer.png  (63 KB)
+
+=== 7. Signup page ===
+  [screenshot] 07_signup_empty.png  (385 KB)
+  [screenshot] 07b_signup_filled.png  (385 KB)
+  Signup -> /planner OK
+
+=== 8. Planner page ===
+  [screenshot] 08_planner_top.png  (103 KB)
+  [screenshot] 08_planner_full.png  (277 KB)
+
+=== 9. Preset buttons ===
+  [screenshot] 09_presets.png  (103 KB)
+  [screenshot] 09b_pragyan_applied.png  (101 KB)
+
+=== 10. Traverse card ===
+  [screenshot] 10_traverse_card.png  (102 KB)
+
+=== 11. Science card ===
+  [screenshot] 11_science_card.png  (110 KB)
+
+=== 12. Configure mission ===
+  [screenshot] 12_mission_configured.png  (84 KB)
+
+=== 13. Running mission (may take 30-120s) ===
+  [screenshot] 13_analysis_running.png  (90 KB)
+  Waiting for results (up to 7 min)...
+  [15s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0015s.png  (90 KB)
+    status: 
+  [30s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0030s.png  (90 KB)
+    status: 
+  [45s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0045s.png  (90 KB)
+    status: 
+  [60s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0060s.png  (90 KB)
+    status: 
+  [75s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0075s.png  (90 KB)
+    status: 
+  [90s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0090s.png  (90 KB)
+    status: 
+  [106s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0106s.png  (90 KB)
+    status: 
+  [121s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0121s.png  (90 KB)
+    status: 
+  [136s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0136s.png  (90 KB)
+    status: 
+  [151s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0151s.png  (90 KB)
+    status: 
+  [166s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0166s.png  (90 KB)
+    status: 
+  [181s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0181s.png  (90 KB)
+    status: 
+  [196s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0196s.png  (90 KB)
+    status: 
+  [212s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0212s.png  (90 KB)
+    status: 
+  [227s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0227s.png  (90 KB)
+    status: 
+  [242s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0242s.png  (90 KB)
+    status: 
+  [257s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0257s.png  (90 KB)
+    status: 
+  [272s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0272s.png  (90 KB)
+    status: 
+  [287s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0287s.png  (90 KB)
+    status: 
+  [303s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0303s.png  (90 KB)
+    status: 
+  [318s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0318s.png  (90 KB)
+    status: 
+  [333s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0333s.png  (90 KB)
+    status: 
+  [348s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0348s.png  (90 KB)
+    status: 
+  [363s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0363s.png  (90 KB)
+    status: 
+  [378s] Still waiting... taking snapshot
+  [screenshot] 13_wait_0378s.png  (90 KB)
+    status: 
+Traceback (most recent call last):
+  File "Z:\Anveshak\e2e_run.py", line 150, in <module>
+    raise TimeoutError("Results never appeared after 15 minutes")
+TimeoutError: Results never appeared after 15 minutes

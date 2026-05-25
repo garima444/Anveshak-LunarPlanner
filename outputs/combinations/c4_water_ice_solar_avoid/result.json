@@ -1,0 +1,131 @@
+{
+  "combination": "c4_water_ice_solar_avoid",
+  "label": "C4",
+  "rover_name": "Pragyan-II",
+  "mission_type": "water_ice",
+  "power_source": "solar",
+  "psr_intent": "avoid",
+  "preset": "pragyan",
+  "analogue": "Solar rover avoiding shadow (Chandrayaan-3 class)",
+  "safety_at_top1": 0.8536,
+  "top_sites": [
+    {
+      "rank": 1,
+      "pixel_row": 3010,
+      "pixel_col": 6727,
+      "lon": 38.92894888937818,
+      "lat": -84.77371663429673,
+      "elevation_m": 6889.0,
+      "slope_deg": 0.6752060651779175,
+      "roughness_m": 0.0,
+      "safety_score": 0.8535579442977905,
+      "mission_score": 0.6870945692062378,
+      "final_score": 0.8036189079284668,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -84.77\u00b0S, 38.93\u00b0E."
+    },
+    {
+      "rank": 2,
+      "pixel_row": 5497,
+      "pixel_col": 5561,
+      "lon": 131.0449006389237,
+      "lat": -88.7018327201641,
+      "elevation_m": 1080.0,
+      "slope_deg": 0.2387310415506363,
+      "roughness_m": 0.0,
+      "safety_score": 0.8518402576446533,
+      "mission_score": 0.665008008480072,
+      "final_score": 0.7957905530929565,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -88.70\u00b0S, 131.04\u00b0E."
+    },
+    {
+      "rank": 3,
+      "pixel_row": 2912,
+      "pixel_col": 4323,
+      "lon": -19.033939174260635,
+      "lat": -85.49341065040292,
+      "elevation_m": 2566.0,
+      "slope_deg": 0.4774538278579712,
+      "roughness_m": 0.0,
+      "safety_score": 0.8523470759391785,
+      "mission_score": 0.663638710975647,
+      "final_score": 0.7957345843315125,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -85.49\u00b0S, -19.03\u00b0E."
+    },
+    {
+      "rank": 4,
+      "pixel_row": 3045,
+      "pixel_col": 5143,
+      "lon": 2.1770134530621514,
+      "lat": -85.99950917502953,
+      "elevation_m": 5155.5,
+      "slope_deg": 1.9091525077819824,
+      "roughness_m": 0.0,
+      "safety_score": 0.8517585396766663,
+      "mission_score": 0.661663830280304,
+      "final_score": 0.7947301268577576,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -86.00\u00b0S, 2.18\u00b0E."
+    },
+    {
+      "rank": 5,
+      "pixel_row": 3053,
+      "pixel_col": 4332,
+      "lon": -20.036028071564647,
+      "lat": -85.76191760635491,
+      "elevation_m": 2200.0,
+      "slope_deg": 0.5338065028190613,
+      "roughness_m": 0.0,
+      "safety_score": 0.8513603806495667,
+      "mission_score": 0.6588637828826904,
+      "final_score": 0.7936114072799683,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -85.76\u00b0S, -20.04\u00b0E."
+    }
+  ],
+  "path_stats": {
+    "total_distance_m": 16701.748904055803,
+    "total_distance_km": 16.701748904055805,
+    "max_slope_deg": 11.768289566040039,
+    "mean_slope_deg": 3.7624370823695994,
+    "estimated_time_hrs": 463.9374695571057,
+    "waypoint_count": 228,
+    "total_energy_wh": 50224.3455,
+    "uphill_energy_wh": 27037.3809,
+    "downhill_regen_wh": 495.6111,
+    "energy_per_km": 3007.1309,
+    "battery_pct_used": 100448.6911,
+    "energy_risk": "HIGH",
+    "battery_feasible": false
+  },
+  "checks": [
+    {
+      "check": "top_sites_exist",
+      "result": "PASS",
+      "value": "10 sites, top_score=0.8036",
+      "expected": ">= 1 site with final_score > 0"
+    },
+    {
+      "check": "top3_illumination_avoid",
+      "result": "PASS",
+      "value": "mean_illum=0.6697",
+      "expected": "> 0.40 (avoid mode: well-lit sites)"
+    }
+  ],
+  "n_checks_pass": 2,
+  "n_checks_total": 2,
+  "rover_profile": {
+    "max_slope_deg": 12.0,
+    "min_flat_radius_m": 200.0,
+    "wheel_radius_m": 0.075,
+    "rover_mass_kg": 26.0,
+    "wheel_width_m": 0.05,
+    "n_wheels": 6,
+    "speed_kmh": 0.036,
+    "battery_wh": 50.0,
+    "slope_penalty_factor": 15.0,
+    "mission_type": "water_ice",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "priority": 0.3,
+    "solar_panel_w": 50.0,
+    "mission_day": 7.4
+  }
+}

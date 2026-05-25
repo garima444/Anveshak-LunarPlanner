@@ -1,0 +1,42 @@
+{
+  "test_name": "Slope Computation Accuracy",
+  "sub_results": {
+    "8a": {
+      "max_interior_slope_deg": 0.0,
+      "tolerance_deg": 0.001,
+      "result": "PASS",
+      "notes": "max_slope=0.000000\u00b0, tolerance=0.001\u00b0"
+    },
+    "8b": {
+      "mean_interior_slope_deg": 45.0,
+      "expected_deg": 45.0,
+      "pct_error": 0.0,
+      "result": "PASS",
+      "notes": "mean_slope=45.0000\u00b0, expected=45.0\u00b0, err=0.0000%"
+    },
+    "8c": {
+      "mean_interior_slope_deg": 30.0,
+      "expected_deg": 30.0,
+      "abs_error_deg": 0.0,
+      "result": "PASS",
+      "notes": "mean_slope=30.0000\u00b0, expected=30.0\u00b0"
+    },
+    "8d": {
+      "mean_interior_slope_deg": 20.0,
+      "expected_deg": 20.0,
+      "abs_error_deg": 0.0,
+      "result": "PASS",
+      "notes": "mean_slope=20.0000\u00b0, expected=20.0\u00b0"
+    },
+    "8e": {
+      "slope_at_adjacent_49_50": null,
+      "adjacent_pixel_is_nan": true,
+      "slope_at_far_pixel_48_48_deg": 0.0,
+      "far_pixel_near_zero": true,
+      "result": "PASS",
+      "notes": "slope[49,50]=NaNdeg (adj to NaN), slope[48,48]=0.0000deg"
+    }
+  },
+  "result": "PASS",
+  "notes": "Sub-tests: 8a=PASS, 8b=PASS, 8c=PASS, 8d=PASS, 8e=PASS"
+}

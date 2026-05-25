@@ -394,16 +394,34 @@ def _compute_mission_score(
             psi_proxy = np.where(nodata, np.float32(0.0), psi_proxy)
             del local_mean_psi
 
-        # Water-ice mission weights (sum = 1.0):
-        #   lat        0.30 — polar latitude bonus; LCROSS and all confirmed water-ice
-        #                     sites are at ≥84°S (Colaprete et al. 2010, Science).
-        #   psr        0.40 — PSR proximity is the primary water-ice discriminator;
-        #                     highest weight because ice only survives in permanent shadow.
-        #   psi        0.30 — solar illumination for rover power; complements psr because
-        #                     optimal landing is near-but-not-inside the PSR.
-        score = (np.float32(0.30) * lat_score
-                 + np.float32(0.40) * psr_score
-                 + np.float32(0.30) * psi_proxy)
+        # Water-ice mission weights differ by power_source (sum = 1.0 in each case):
+        #
+        # Solar rover:
+        #   lat  0.30 — polar latitude bonus (Colaprete et al. 2010, Science).
+        #   psr  0.25 — PSR proximity, but solar rover can only ACCESS PSR if it has power
+        #               → lower weight than RTG because power availability gating.
+        #   psi  0.45 — illumination is the binding operational constraint for solar rovers;
+        #               VIPER power budget requires ≥0.30 illumination fraction for nominal ops
+        #               (Bhandari et al. 2020, AIAA 2020-4126; VIPER Solar Power System analysis).
+        #               High PSI weight rewards sites where the rover can charge batteries for
+        #               short PSR sorties (the VIPER/Artemis operational concept).
+        #
+        # RTG rover:
+        #   lat  0.30 — polar latitude bonus (same).
+        #   psr  0.50 — PSR proximity is the primary binding constraint: nuclear power means
+        #               the rover can operate anywhere; ice ACCESS is what matters most.
+        #               Source: Chang'e-7 Lunar Ice Explorer concept (Xiao et al. 2021,
+        #               Nat. Astron. doi:10.1038/s41550-020-01250-3).
+        #   psi  0.20 — illumination is irrelevant for RTG power; minor weight retained so
+        #               science-value maps across mission types stay comparable.
+        if power_source == "solar":
+            score = (np.float32(0.30) * lat_score
+                     + np.float32(0.25) * psr_score
+                     + np.float32(0.45) * psi_proxy)
+        else:  # rtg (or any non-solar)
+            score = (np.float32(0.30) * lat_score
+                     + np.float32(0.50) * psr_score
+                     + np.float32(0.20) * psi_proxy)
 
     # ------------------------------------------------------------------ geological
     elif mission_type == "geological":
@@ -417,18 +435,29 @@ def _compute_mission_score(
         rv95 = rv95 if rv95 > 1e-6 else 1.0
         var_norm  = np.clip(r_var / np.float32(rv95), np.float32(0.0), np.float32(1.0))
 
-        # Elevation gradient magnitude — rewards geological boundaries
-        # (float32 finite-difference to avoid float64 promotion and ~800 MB overhead)
+        # Elevation gradient magnitude — rewards geological boundaries.
+        # All ops use out= or in-place arithmetic to avoid 392 MB temporaries:
+        # naive `gx[:,1:-1] = (a - b) * 0.5` creates a (H, W-2) temp before
+        # the multiply; np.subtract(..., out=gx[:,1:-1]) writes directly.
         gx = np.empty_like(elev_f)
-        gx[:, 1:-1] = (elev_f[:, 2:] - elev_f[:, :-2]) * np.float32(0.5)
-        gx[:, 0]    = elev_f[:, 1] - elev_f[:, 0]
+        np.subtract(elev_f[:, 2:], elev_f[:, :-2], out=gx[:, 1:-1])
+        gx[:, 1:-1] *= np.float32(0.5)
+        gx[:, 0]    = elev_f[:, 1]  - elev_f[:, 0]
         gx[:, -1]   = elev_f[:, -1] - elev_f[:, -2]
+        np.multiply(gx, gx, out=gx)                    # gx = gx²  (in-place)
+
         gy = np.empty_like(elev_f)
-        gy[1:-1]    = (elev_f[2:] - elev_f[:-2]) * np.float32(0.5)
-        gy[0]       = elev_f[1] - elev_f[0]
-        gy[-1]      = elev_f[-1] - elev_f[-2]
-        grad_mag    = np.sqrt(gx * gx + gy * gy)
-        del gx, gy
+        np.subtract(elev_f[2:], elev_f[:-2], out=gy[1:-1])
+        gy[1:-1] *= np.float32(0.5)
+        gy[0]    = elev_f[1]  - elev_f[0]
+        gy[-1]   = elev_f[-1] - elev_f[-2]
+        np.multiply(gy, gy, out=gy)                    # gy = gy²  (in-place)
+
+        np.add(gx, gy, out=gx)                         # gx = gx² + gy²
+        del gy
+        np.sqrt(gx, out=gx)                            # gx = |grad|
+        grad_mag = gx
+        del gx
         g95 = float(np.nanpercentile(grad_mag, 95))
         g95 = g95 if g95 > 1e-6 else 1.0
         grad_norm = np.clip(grad_mag / np.float32(g95), np.float32(0.0), np.float32(1.0))
@@ -439,9 +468,28 @@ def _compute_mission_score(
         # band (-85 to -88°S). Near-zero at -90°S (too rough) and -82°S (far from PSRs).
         # Using lat_grid median makes this self-adjusting if a different DEM is loaded.
         center_lat = float(np.nanmedian(lat_grid))
-        access_score = np.exp(
-            -(lat_grid - np.float32(center_lat)) ** 2 / np.float32(2.0 * 1.5 ** 2)
-        )
+        # Compute in-place to avoid 3 × H×W temporary arrays.
+        # (lat_grid - c)**2 / -sigma2  →  done with 2 allocations instead of 4.
+        _sigma2 = np.float32(2.0 * 1.5 ** 2)
+        access_score = (lat_grid - np.float32(center_lat)).astype(np.float32)
+        np.multiply(access_score, access_score, out=access_score)  # in-place square
+        access_score /= -_sigma2                                    # in-place negate+divide
+        np.exp(access_score, out=access_score)                     # in-place exp
+
+        # DEM boundary mask — zero out the outer 2% of the array on each edge.
+        # At the DEM boundary, the 3×3 roughness window is incomplete, producing
+        # artefactually high gradient magnitudes and zero roughness values.
+        # This prevents boundary pixels from dominating geological site selection.
+        # Source: standard DEM-processing practice; see also LOLA PDS archive notes
+        #         (NASA PDS Geosciences Node, LOLA Team, 2016) recommending a 10-pixel
+        #         margin when computing derivatives at tile edges.
+        H_g, W_g = elevation.shape
+        margin = max(int(H_g * 0.02), 10)   # at least 10 px, at most 2% of side
+        edge_mask = np.ones((H_g, W_g), dtype=np.float32)
+        edge_mask[:margin, :]  = np.float32(0.0)
+        edge_mask[-margin:, :] = np.float32(0.0)
+        edge_mask[:, :margin]  = np.float32(0.0)
+        edge_mask[:, -margin:] = np.float32(0.0)
 
         # Geological mission weights (sum = 1.0):
         #   roughness_var 0.40 — local roughness variance rewards terrain diversity
@@ -455,7 +503,8 @@ def _compute_mission_score(
             np.float32(0.40) * var_norm
             + np.float32(0.35) * grad_norm
             + np.float32(0.25) * access_score
-        )
+        ) * edge_mask
+        del edge_mask
 
     # ------------------------------------------------------------------ atmospheric
     else:
@@ -531,14 +580,22 @@ def build_science_map(
     A* planner routes through cells excellent for *any* selected experiment rather
     than only cells mediocre for all of them.
 
-    Experiment IDs and their primary sources
-    -----------------------------------------
-    volatile_detection  : Paige et al. 2010 Science 330:479–482 (Diviner 110 K threshold)
-    mineralogy          : Pieters et al. 2009 Science 326:568–572 (M3 2.8 µm OH band)
-    thermal_environment : Vasavada et al. 2012 JGR Planets 117:E00H18 (PSR edge gradient)
-    geomorphology       : Kreslavsky & Head 2000 JGR Planets 105:26695 (roughness variance)
-    regolith_mechanics  : Bandfield et al. 2011 JGR Planets 116:E00H02 (LROC crater density)
-    space_weathering    : Lucey et al. 2000 JGR Planets 105:20377 (optical maturity proxy)
+    Experiment IDs and their primary sources (data-source upgrade May 2026)
+    -----------------------------------------------------------------------
+    volatile_detection  : Paige et al. 2010 Science 330:479–482 (Diviner 110 K threshold + PSR)
+    mineralogy          : Spudis et al. 2013 JGR Planets (Mini-RF CPR 128ppd);
+                          fallback: elevation gradient proxy (Pieters et al. 2009)
+    thermal_environment : Mazarico et al. 2011 JGR Planets; Vasavada et al. 2012
+                          JGR Planets 117:E00H18 (illumination gradient);
+                          fallback: PSR bell-curve proxy
+    geomorphology       : Kreslavsky & Head 2000 JGR Planets 105:26695
+                          (MAS_560m + Hurst exponent); fallback: roughness variance
+    space_weathering    : Kreslavsky & Head 2000 JGR Planets 105:26695
+                          (freshness_index = MAS_57m/MAS_225m + Hurst inverse);
+                          fallback: roughness variance + slope proxy (Lucey et al. 2000)
+    NOTE: regolith_mechanics removed (data-source upgrade, May 2026).
+          Functionality subsumed by geomorphology (MAS fractal), space_weathering
+          (freshness_index), and the path-level soft_terrain_warning flag.
     """
     if not experiments:
         return np.zeros(elevation.shape, dtype=np.float32)
@@ -613,10 +670,16 @@ def build_science_map(
                 component = _get_psr_prox()
 
         elif exp == "mineralogy":
-            # M3 2.8 µm OH absorption band (Pieters et al. 2009 Science 326:568–572)
-            m3 = profile.get("m3_oh_band")
-            if m3 is not None:
-                component = np.where(np.isfinite(m3), m3.astype(np.float32), np.float32(0.0))
+            # Mini-RF CPR is the primary mineralogy indicator.
+            # CPR > 1 inside PSR correlates with subsurface hydration / ice signature.
+            # Source: Spudis et al. 2013, JGR Planets.
+            # Fallback: elevation gradient marks geological unit boundaries when CPR absent.
+            # Source (fallback): Pieters et al. 2009 Science 326:568–572.
+            minirf = profile.get("minirf_cpr")
+            if minirf is not None and not np.all(minirf == 0):
+                component = np.where(
+                    np.isfinite(minirf), minirf.astype(np.float32), np.float32(0.0)
+                )
             else:
                 # Proxy: elevation gradient magnitude marks geological unit boundaries
                 gx = np.empty_like(elev_f)
@@ -635,17 +698,26 @@ def build_science_map(
                 del grad_mag
 
         elif exp == "thermal_environment":
-            # Thermal inertia science is maximised at PSR edge where day/night ΔT≈200 K
-            # (Vasavada et al. 2012 JGR Planets 117:E00H18)
-            coltemp = profile.get("diviner_coltemp")
-            if coltemp is not None:
-                ct_f = np.where(np.isfinite(coltemp), coltemp.astype(np.float32), np.float32(0.5))
-                # Thermal gradient over a 5-pixel (≈600 m) kernel captures PSR rim transition zone
-                local_mean = uniform_filter(ct_f, size=5)
-                component  = np.clip(
-                    np.abs(ct_f - local_mean) / np.float32(0.3),
+            # Illumination gradient is used as a thermal gradient proxy.
+            # Pixels where illumination changes rapidly experience steep day/night ΔT
+            # transitions — prime thermal inertia science zones.
+            # Sources: Mazarico et al. 2011, JGR Planets; Vasavada et al. 2012,
+            #          JGR Planets 117:E00H18.
+            # Fallback: PSR edge bell-curve proxy (geometric only, no real data).
+            illum = profile.get("illumination_map")
+            if illum is not None and not np.all(illum == 0):
+                # Gradient of illumination fraction (dimensionless / metre)
+                _dy, _dx = np.gradient(illum.astype(np.float64), resolution_m)
+                gradient_mag = np.sqrt(_dx ** 2 + _dy ** 2).astype(np.float32)
+                del _dx, _dy
+                _valid_gm = gradient_mag[np.isfinite(gradient_mag)]
+                _p95_gm = float(np.nanpercentile(_valid_gm, 95)) if _valid_gm.size > 0 else 1.0
+                del _valid_gm
+                component = np.clip(
+                    gradient_mag / max(_p95_gm, 1e-6),
                     np.float32(0.0), np.float32(1.0),
                 )
+                del gradient_mag
             else:
                 # Proxy: bell curve peaking at PSR proximity=0.5 (edge zone)
                 prox = _get_psr_prox()
@@ -653,26 +725,56 @@ def build_science_map(
                                     np.float32(0.0), np.float32(1.0))
 
         elif exp == "geomorphology":
-            # Crater morphology & mass wasting — roughness variance at 20-pixel (1.2 km) kernel
-            # (Kreslavsky & Head 2000 JGR Planets 105:26695, adapted for lunar LOLA 60 m data)
-            component = _get_var_norm()
-
-        elif exp == "regolith_mechanics":
-            # Rock abundance proxy: high crater density → high ejecta blocks
-            # (Bandfield et al. 2011 JGR Planets 116:E00H02)
-            cd = profile.get("crater_density")
-            if cd is not None:
-                component = np.where(np.isfinite(cd), cd.astype(np.float32), np.float32(0.0))
+            # MAS at 560m baseline captures crater-scale geomorphic features.
+            # Low Hurst exponent = anti-persistent rough terrain = high scientific interest.
+            # Source: Kreslavsky & Head 2000, JGR Planets 105:26695.
+            # Fallback: roughness variance at 20-pixel (1.2 km) kernel (DEM-derived).
+            mas_560 = profile.get("mas_560m")
+            hurst   = profile.get("hurst_exponent")
+            if mas_560 is not None and not np.all(mas_560 == 0):
+                _hurst_inv = (
+                    (np.float32(1.0) - hurst.astype(np.float32))
+                    if hurst is not None
+                    else np.zeros_like(mas_560, dtype=np.float32)
+                )
+                component = (
+                    np.float32(0.6) * mas_560.astype(np.float32)
+                    + np.float32(0.4) * _hurst_inv
+                ).astype(np.float32)
+                del _hurst_inv
             else:
-                r95 = float(np.nanpercentile(rough_f, 95))
-                r95 = r95 if r95 > 1e-6 else 1.0
-                component = np.clip(rough_f / np.float32(r95), np.float32(0.0), np.float32(1.0))
+                # Fallback: roughness variance at 20-pixel (1.2 km) kernel
+                # (Kreslavsky & Head 2000, adapted for lunar LOLA 60 m data)
+                component = _get_var_norm()
+
+        # NOTE: regolith_mechanics experiment removed (data-source upgrade, May 2026).
+        # Functionality subsumed by geomorphology (MAS fractal roughness),
+        # space_weathering (freshness_index), and the path-level soft_terrain_warning flag.
 
         elif exp == "space_weathering":
-            # Fresh crater proxy: high roughness variance + steep walls (angle of repose 35°)
-            # (Lucey et al. 2000 JGR 105:20377; Mitchell et al. 1972 Proc. 3rd Lunar Sci. Conf.)
-            slope_norm = np.clip(slope_f / np.float32(35.0), np.float32(0.0), np.float32(1.0))
-            component = np.float32(0.5) * _get_var_norm() + np.float32(0.5) * slope_norm
+            # freshness_index = MAS_57m / MAS_225m — high ratio means fine-scale roughness
+            # dominates = fresh crater ejecta or recently disturbed unweathered terrain.
+            # Low Hurst exponent = anti-persistent rough surface = unweathered.
+            # Source: Kreslavsky & Head 2000, JGR Planets 105:26695.
+            # Fallback: roughness variance + slope proxy (DEM-derived).
+            # Source (fallback): Lucey et al. 2000, JGR 105:20377.
+            freshness = profile.get("freshness_index")
+            hurst     = profile.get("hurst_exponent")
+            if freshness is not None and not np.all(freshness == 0):
+                _hurst_inv = (
+                    (np.float32(1.0) - hurst.astype(np.float32))
+                    if hurst is not None
+                    else np.zeros_like(freshness, dtype=np.float32)
+                )
+                component = (
+                    np.float32(0.5) * freshness.astype(np.float32)
+                    + np.float32(0.5) * _hurst_inv
+                ).astype(np.float32)
+                del _hurst_inv
+            else:
+                # Fallback: roughness variance + slope proxy (DEM-derived only)
+                slope_norm = np.clip(slope_f / np.float32(35.0), np.float32(0.0), np.float32(1.0))
+                component  = np.float32(0.5) * _get_var_norm() + np.float32(0.5) * slope_norm
 
         if component is not None:
             component = np.where(np.isfinite(component), component, np.float32(0.0))
@@ -982,24 +1084,33 @@ def score_terrain(
     )
 
     # ML refinement (if a trained model is available)
-    try:
-        from core.terrain_classifier import load_classifier, classify_terrain as _classify
-        clf = load_classifier()
-        if clf is not None:
-            print("[scorer] Applying ML terrain classification refinement …")
-            class_map = _classify(clf, elevation, slope, roughness, profile)
-            for site in top_sites:
-                r, c = site["pixel_row"], site["pixel_col"]
-                cls = int(class_map[r, c])
-                if cls == 4:   # SCIENCE_TARGET — boost
-                    site["final_score"] = min(1.0, site["final_score"] + 0.1)
-                elif cls == 0:  # HAZARD_ZONE — zero out
-                    site["final_score"] = 0.0
-            top_sites.sort(key=lambda s: s["final_score"], reverse=True)
-            for i, s in enumerate(top_sites, start=1):
-                s["rank"] = i
-    except ImportError:
-        pass
+    # Skip on large DEMs (>4M pixels): strip-wise classification takes too long
+    # and risks OOM on constrained hardware. Safety/mission scores are already
+    # computed correctly; ML refinement is a minor adjustment (+0.1 / zero-out).
+    _n_px = elevation.shape[0] * elevation.shape[1]
+    _ML_PIXEL_LIMIT = 4_000_000   # ~2000×2000 — skip on larger DEMs
+    if _n_px > _ML_PIXEL_LIMIT:
+        print(f"[scorer] ML refinement skipped (DEM {elevation.shape[0]}x{elevation.shape[1]}, "
+              f"{_n_px//1_000_000}M px > {_ML_PIXEL_LIMIT//1_000_000}M limit)")
+    else:
+        try:
+            from core.terrain_classifier import load_classifier, classify_terrain as _classify
+            clf = load_classifier()
+            if clf is not None:
+                print("[scorer] Applying ML terrain classification refinement …")
+                class_map = _classify(clf, elevation, slope, roughness, profile)
+                for site in top_sites:
+                    r, c = site["pixel_row"], site["pixel_col"]
+                    cls = int(class_map[r, c])
+                    if cls == 4:   # SCIENCE_TARGET — boost
+                        site["final_score"] = min(1.0, site["final_score"] + 0.1)
+                    elif cls == 0:  # HAZARD_ZONE — zero out
+                        site["final_score"] = 0.0
+                top_sites.sort(key=lambda s: s["final_score"], reverse=True)
+                for i, s in enumerate(top_sites, start=1):
+                    s["rank"] = i
+        except ImportError:
+            pass
 
     # Step 0 diagnostic: layer distribution at top sites
     _layer_diag = [

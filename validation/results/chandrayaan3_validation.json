@@ -1,0 +1,9 @@
+{
+  "test_name": "Chandrayaan-3 Landing Site Validation",
+  "lat": -69.373,
+  "lon": 32.348,
+  "region": "south_pole_75_90",
+  "result": "SKIP",
+  "skip_reason": "Failed to load region 'south_pole_75_90': Unable to allocate 394. MiB for an array with shape (10163, 10165) and data type float32",
+  "notes": "Failed to load region 'south_pole_75_90': Unable to allocate 394. MiB for an array with shape (10163, 10165) and data type float32"
+}

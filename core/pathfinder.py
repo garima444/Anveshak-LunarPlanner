@@ -309,6 +309,69 @@ def astar(
 
 
 # ---------------------------------------------------------------------------
+# Soft terrain risk along path
+# ---------------------------------------------------------------------------
+
+def _compute_soft_terrain_risk(
+    profile: dict,
+    path_pixels: list[tuple[int, int]],
+) -> dict:
+    """Compute soft terrain risk indicators along the rover traverse.
+
+    Uses a 3-factor model when LDSM_ERR slope error data is available:
+        PSR × 0.4  (ice-modified regolith risk — Heiken et al. 1991, Lunar Sourcebook)
+        (1 − quality) × 0.3  (low LOLA observation count = uncertain surface)
+        ldsm_err × 0.3  (slope uncertainty = disturbed terrain — Barker et al. 2023)
+
+    Falls back to a 2-factor model when LDSM_ERR is all-zero (file not yet present):
+        PSR × 0.5
+        (1 − quality) × 0.5
+
+    Returns a dict with keys ready to merge into path_stats.
+    """
+    psr      = profile.get("psr_mask")
+    quality  = profile.get("quality_mask")
+    ldsm     = profile.get("ldsm_err")
+    use_ldsm = ldsm is not None and not np.all(ldsm == 0)
+
+    risks: list[float] = []
+    for r, c in path_pixels:
+        risk = 0.0
+        if use_ldsm:
+            if psr     is not None: risk += float(psr[r, c])                  * 0.4
+            if quality is not None: risk += (1.0 - float(quality[r, c]))      * 0.3
+            risk += float(ldsm[r, c]) * 0.3
+        else:
+            if psr     is not None: risk += float(psr[r, c])                  * 0.5
+            if quality is not None: risk += (1.0 - float(quality[r, c]))      * 0.5
+        risks.append(min(risk, 1.0))
+
+    if not risks:
+        return {
+            "mean_soft_risk":       0.0,
+            "max_soft_risk":        0.0,
+            "soft_terrain_pct":     0.0,
+            "stuck_risk":           "LOW",
+            "soft_terrain_warning": False,
+        }
+
+    mean_risk  = sum(risks) / len(risks)
+    max_risk   = max(risks)
+    high_count = sum(1 for v in risks if v > 0.6)
+    pct        = 100.0 * high_count / len(risks)
+    stuck      = ("HIGH"     if max_risk > 0.7 else
+                  "MODERATE" if max_risk > 0.4 else
+                  "LOW")
+    return {
+        "mean_soft_risk":       round(mean_risk, 4),
+        "max_soft_risk":        round(max_risk,  4),
+        "soft_terrain_pct":     round(pct, 1),
+        "stuck_risk":           stuck,
+        "soft_terrain_warning": max_risk > 0.7,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Path statistics
 # ---------------------------------------------------------------------------
 
@@ -391,6 +454,8 @@ def generate_waypoints(
     anomalies: list[dict] | None = None,
     science_map: np.ndarray | None = None,
     science_experiments: list[str] | None = None,
+    start: tuple[int, int] | None = None,
+    max_dist_px: int | None = None,
 ) -> list[tuple[int, int]]:
     """Select up to *n* waypoints from *top_sites* filtered by mission priority.
 
@@ -414,6 +479,14 @@ def generate_waypoints(
         Maximum number of waypoints to return.
     anomalies : list[dict] | None
         Optional anomaly dicts from :func:`~core.anomaly_detector.detect_anomalies`.
+    start : tuple[int, int] | None
+        Origin pixel (row, col). When provided with *max_dist_px*, candidates
+        farther than *max_dist_px* Euclidean pixels are excluded.
+        Useful for rovers with tight slope limits that cannot traverse long
+        distances (e.g. Pragyan at 12° — most inter-site terrain is impassable).
+    max_dist_px : int | None
+        Maximum Euclidean distance in pixels from *start* to any waypoint.
+        Ignored when *start* is None.
 
     Returns
     -------
@@ -423,14 +496,35 @@ def generate_waypoints(
     if not top_sites:
         return []
 
+    # Distance filter: when a start pixel and max_dist_px are provided, exclude
+    # any candidate that is farther than max_dist_px Euclidean pixels away.
+    # This prevents unreachable long-range goals for rovers with tight slope limits
+    # (e.g. Pragyan at 12° — any path >50 km crosses impassable terrain at the
+    # south pole).  Falls back to the full list if filtering would leave nothing.
+    import math as _math
+    _reachable = top_sites
+    if start is not None and max_dist_px is not None and max_dist_px > 0:
+        sr, sc = start
+        filtered = [
+            s for s in top_sites
+            if _math.hypot(s["pixel_row"] - sr, s["pixel_col"] - sc) <= max_dist_px
+        ]
+        if filtered:
+            _reachable = filtered
+            print(f"[waypoints] Distance filter ({max_dist_px} px): "
+                  f"{len(filtered)}/{len(top_sites)} candidates within range.")
+        else:
+            print(f"[waypoints] Distance filter ({max_dist_px} px): "
+                  f"no candidates in range — using full site list.")
+
     # When science experiments are selected, re-score top_sites by blending
     # final_score (60%) with science value at the site pixel (40%).
     # This ensures waypoints favour scientifically rich terrain while still
     # respecting the overall mission priority score.
     if science_map is not None and science_experiments:
         h, w = science_map.shape
-        top_sites = sorted(
-            top_sites,
+        _reachable = sorted(
+            _reachable,
             key=lambda s: (
                 np.float32(0.6) * s["final_score"]
                 + np.float32(0.4) * float(
@@ -453,21 +547,21 @@ def generate_waypoints(
         if len(relevant) >= n:
             return [(a["centroid_row"], a["centroid_col"]) for a in relevant[:n]]
 
-        # Partial fill: use all relevant anomaly waypoints, pad with top_sites
+        # Partial fill: use all relevant anomaly waypoints, pad with _reachable
         wpts: list[tuple[int, int]] = [
             (a["centroid_row"], a["centroid_col"]) for a in relevant
         ]
         seen: set[tuple[int, int]] = set(wpts)
 
-        # Build sorted top_sites fallback (already re-scored above if science active)
+        # Build sorted _reachable fallback (already re-scored above if science active)
         if mission_type == "water_ice":
-            sorted_sites = sorted(top_sites, key=lambda s: s["lat"])
+            sorted_sites = sorted(_reachable, key=lambda s: s["lat"])
         elif mission_type == "geological":
-            sorted_sites = sorted(top_sites, key=lambda s: s["roughness_m"], reverse=True)
+            sorted_sites = sorted(_reachable, key=lambda s: s["roughness_m"], reverse=True)
         elif mission_type == "atmospheric":
-            sorted_sites = sorted(top_sites, key=lambda s: s["elevation_m"], reverse=True)
+            sorted_sites = sorted(_reachable, key=lambda s: s["elevation_m"], reverse=True)
         else:
-            sorted_sites = top_sites[:]
+            sorted_sites = _reachable[:]
 
         for s in sorted_sites:
             if len(wpts) >= n:
@@ -478,15 +572,15 @@ def generate_waypoints(
                 seen.add(pt)
         return wpts
 
-    # ---- Default: sort top_sites by mission priority ----
+    # ---- Default: sort _reachable by mission priority ----
     if mission_type == "water_ice":
-        sorted_sites = sorted(top_sites, key=lambda s: s["lat"])
+        sorted_sites = sorted(_reachable, key=lambda s: s["lat"])
     elif mission_type == "geological":
-        sorted_sites = sorted(top_sites, key=lambda s: s["roughness_m"], reverse=True)
+        sorted_sites = sorted(_reachable, key=lambda s: s["roughness_m"], reverse=True)
     elif mission_type == "atmospheric":
-        sorted_sites = sorted(top_sites, key=lambda s: s["elevation_m"], reverse=True)
+        sorted_sites = sorted(_reachable, key=lambda s: s["elevation_m"], reverse=True)
     else:
-        sorted_sites = top_sites[:]
+        sorted_sites = _reachable[:]
 
     return [(s["pixel_row"], s["pixel_col"]) for s in sorted_sites[:n]]
 
@@ -504,6 +598,7 @@ def find_path(
     elevation: np.ndarray | None = None,
     science_map: np.ndarray | None = None,
     mobility_risk_map: np.ndarray | None = None,
+    profile: dict | None = None,
 ) -> tuple[list[tuple[int, int]] | None, dict | None]:
     """Plan a rover path from *start* to *goal* on the given terrain.
 
@@ -526,6 +621,9 @@ def find_path(
         Float32 Bekker-Wong sinkage risk raster [0, 1] from
         core.mobility.compute_trafficability_map(); None disables soft terrain
         routing.  Passed straight through to build_cost_grid().
+    profile : dict | None
+        Terrain profile dict from load_terrain(); used to compute soft terrain
+        risk statistics (PSR, quality_mask, ldsm_err). None disables the check.
 
     Returns
     -------
@@ -578,6 +676,11 @@ def find_path(
     # battery_feasible: False when the path demands more energy than the rover's battery.
     # A value >100% means the rover runs out of power mid-traverse — caller should warn.
     stats["battery_feasible"] = stats.get("battery_pct_used", 0.0) <= 100.0
+
+    # Soft terrain risk along traverse (PSR + data quality + slope error).
+    # Only computed when profile is provided; adds 5 new keys to stats.
+    if profile is not None:
+        stats.update(_compute_soft_terrain_risk(profile, path))
 
     return path, stats
 

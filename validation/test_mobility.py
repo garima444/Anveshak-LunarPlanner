@@ -227,8 +227,9 @@ def run(elevation, slope, roughness, profile, results_dir, plots_dir) -> dict:
         "n_total":     n_total,
     })
 
-    out = results_dir / "mobility_validation.json"
-    out.write_text(json.dumps(result, indent=2))
+    out = Path(results_dir) / "mobility_validation.json"
+    with open(out, "w", encoding="utf-8") as _f:
+        json.dump(result, _f, indent=2)
     print(f"  Saved: {out}")
     return result
 

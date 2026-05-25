@@ -1,0 +1,137 @@
+{
+  "combination": "c8_atmospheric_solar_avoid",
+  "label": "C8",
+  "rover_name": "Atmos-Solar",
+  "mission_type": "atmospheric",
+  "power_source": "solar",
+  "psr_intent": "avoid",
+  "preset": "custom",
+  "analogue": "Solar atmospheric science rover",
+  "safety_at_top1": 0.8839,
+  "top_sites": [
+    {
+      "rank": 1,
+      "pixel_row": 4280,
+      "pixel_col": 8581,
+      "lon": 77.39210814719938,
+      "lat": -82.88261549499049,
+      "elevation_m": 4161.5,
+      "slope_deg": 0.7161599397659302,
+      "roughness_m": 0.0,
+      "safety_score": 0.8838567733764648,
+      "mission_score": 1.0,
+      "final_score": 0.9535427093505859,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.88) ideal for safe touchdown at -82.88\u00b0S, 77.39\u00b0E."
+    },
+    {
+      "rank": 2,
+      "pixel_row": 1012,
+      "pixel_col": 6131,
+      "lon": 14.716429323551214,
+      "lat": -81.72048322328843,
+      "elevation_m": 2704.0,
+      "slope_deg": 1.2853978872299194,
+      "roughness_m": 0.0,
+      "safety_score": 0.8793630599975586,
+      "mission_score": 1.0,
+      "final_score": 0.9517452716827393,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.88) ideal for safe touchdown at -81.72\u00b0S, 14.72\u00b0E."
+    },
+    {
+      "rank": 3,
+      "pixel_row": 44,
+      "pixel_col": 1399,
+      "lon": -36.13677430153385,
+      "lat": -77.74250168648697,
+      "elevation_m": 4702.0,
+      "slope_deg": 1.6876050233840942,
+      "roughness_m": 0.0,
+      "safety_score": 0.8791020512580872,
+      "mission_score": 1.0,
+      "final_score": 0.9516408443450928,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.88) ideal for safe touchdown at -77.74\u00b0S, -36.14\u00b0E."
+    },
+    {
+      "rank": 4,
+      "pixel_row": 2526,
+      "pixel_col": 3053,
+      "lon": -38.397996418045324,
+      "lat": -83.5934355248385,
+      "elevation_m": 4864.0,
+      "slope_deg": 1.5095270872116089,
+      "roughness_m": 0.0,
+      "safety_score": 0.8788467645645142,
+      "mission_score": 1.0,
+      "final_score": 0.9515387415885925,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.88) ideal for safe touchdown at -83.59\u00b0S, -38.40\u00b0E."
+    },
+    {
+      "rank": 5,
+      "pixel_row": 2508,
+      "pixel_col": 3124,
+      "lon": -37.2058609524891,
+      "lat": -83.65122623338183,
+      "elevation_m": 5019.0,
+      "slope_deg": 1.012750506401062,
+      "roughness_m": 0.0,
+      "safety_score": 0.8767789602279663,
+      "mission_score": 1.0,
+      "final_score": 0.9507116079330444,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.88) ideal for safe touchdown at -83.65\u00b0S, -37.21\u00b0E."
+    }
+  ],
+  "path_stats": {
+    "total_distance_m": 6844.995667241107,
+    "total_distance_km": 6.844995667241107,
+    "max_slope_deg": 14.842296600341797,
+    "mean_slope_deg": 7.1766892400118385,
+    "estimated_time_hrs": 13.689991334482214,
+    "waypoint_count": 101,
+    "total_energy_wh": 1326.4264,
+    "uphill_energy_wh": 77.9917,
+    "downhill_regen_wh": 50.6233,
+    "energy_per_km": 193.7805,
+    "battery_pct_used": 132.6426,
+    "energy_risk": "HIGH",
+    "battery_feasible": false
+  },
+  "checks": [
+    {
+      "check": "top_sites_exist",
+      "result": "PASS",
+      "value": "10 sites, top_score=0.9535",
+      "expected": ">= 1 site with final_score > 0"
+    },
+    {
+      "check": "top3_elevation_solar_atmos",
+      "result": "PASS",
+      "value": "mean_elev=3856 m vs median=-1722 m",
+      "expected": "> DEM median elevation"
+    },
+    {
+      "check": "top3_illumination_solar_atmos",
+      "result": "PASS",
+      "value": "mean_illum=0.5912",
+      "expected": "> 0.40 (solar atmospheric: lit ridges)"
+    }
+  ],
+  "n_checks_pass": 3,
+  "n_checks_total": 3,
+  "rover_profile": {
+    "max_slope_deg": 15.0,
+    "min_flat_radius_m": 400.0,
+    "wheel_radius_m": 0.25,
+    "rover_mass_kg": 200.0,
+    "wheel_width_m": 0.2,
+    "n_wheels": 6,
+    "speed_kmh": 0.5,
+    "battery_wh": 1000.0,
+    "slope_penalty_factor": 15.0,
+    "mission_type": "atmospheric",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "priority": 0.6,
+    "solar_panel_w": 50.0,
+    "mission_day": 7.4
+  }
+}

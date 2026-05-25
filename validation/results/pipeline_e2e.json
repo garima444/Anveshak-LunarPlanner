@@ -1,0 +1,46 @@
+{
+  "test_name": "End-to-End Pipeline Smoke Test",
+  "checks": {
+    "terrain_shape": [
+      300,
+      300
+    ],
+    "score_terrain_time_s": 0.757,
+    "safety_range": [
+      0.0,
+      0.851
+    ],
+    "mission_range": [
+      0.0,
+      0.9997
+    ],
+    "final_range": [
+      0.0,
+      0.7015
+    ],
+    "final_score_std": 0.0999,
+    "impassable_safety_zero": true,
+    "mean_passable_score": 0.5047,
+    "worst_top_site_score": 0.4063,
+    "top_sites_above_mean": true,
+    "n_top_sites": 7,
+    "stage1": "PASS",
+    "stage2": "PASS",
+    "find_path_time_s": 0.055,
+    "path_length": 56,
+    "path_distance_m": 3623.09,
+    "site_separation_m": 3390.9,
+    "battery_feasible": true,
+    "battery_pct": 69.6,
+    "stage3": "PASS",
+    "detect_anomalies_time_s": 2.825,
+    "n_anomalies": 19,
+    "stage4": "PASS"
+  },
+  "warnings": [
+    "Worst top-site score 0.406 < passable mean 0.505 \u2014 ML refinement may be over-penalising synthetic terrain; expected on non-real DEM runs."
+  ],
+  "failures": [],
+  "result": "WARN",
+  "notes": "Stages: S1=PASS, S2=PASS, S3=PASS, S4=PASS. Warnings: ['Worst top-site score 0.406 < passable mean 0.505 \u2014 ML refinement may be over-penalising synthetic terrain; expected on non-real DEM runs.']"
+}

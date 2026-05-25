@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block nav_links %}
+<ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/#features">Features</a></li>
+</ul>
+{% endblock %}
+
+{% block nav_auth %}
+<div class="nav-auth">
+    <span style="font-size:0.88rem;color:var(--text-muted)">Don't have an account?</span>
+    <a href="/signup" class="btn btn--primary btn--sm">Sign Up Free →</a>
+</div>
+{% endblock %}
+
+{% block main_attrs %}class="auth-page"{% endblock %}
+
+{% block content %}
+<div class="auth-split">
+    <!-- Left panel: space illustration -->
+    <div class="auth-split__left">
+        <!-- Floating stars -->
+        <span class="float-star" style="top:8%;left:10%;--tw-dur:2.3s">✦</span>
+        <span class="float-star" style="top:20%;right:12%;--tw-dur:1.7s;--tw-delay:0.4s">✦</span>
+        <span class="float-star" style="top:65%;left:8%;--tw-dur:2.8s;--tw-delay:0.8s">✦</span>
+        <span class="float-star" style="top:80%;right:15%;--tw-dur:2s;--tw-delay:0.2s">✦</span>
+        <span class="float-star" style="top:40%;left:5%;--tw-dur:3s;--tw-delay:1s;font-size:0.7rem">✦</span>
+        <span class="float-star" style="top:50%;right:5%;--tw-dur:2.5s;font-size:0.7rem">✦</span>
+
+        <svg class="auth-space-art" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="loginMoon" cx="40%" cy="35%" r="60%">
+                    <stop offset="0%" stop-color="#E8EDF5"/>
+                    <stop offset="100%" stop-color="#B0BAC8"/>
+                </radialGradient>
+                <radialGradient id="loginEarth" cx="50%" cy="30%" r="60%">
+                    <stop offset="0%" stop-color="#4FC3F7"/>
+                    <stop offset="60%" stop-color="#29B6F6"/>
+                    <stop offset="100%" stop-color="#1565C0"/>
+                </radialGradient>
+            </defs>
+
+            <!-- Stars -->
+            <circle cx="40" cy="40" r="1.5" fill="#FFD23F" opacity="0.8"/>
+            <circle cx="100" cy="20" r="1" fill="#fff" opacity="0.7"/>
+            <circle cx="180" cy="35" r="1.5" fill="#FFD23F" opacity="0.6"/>
+            <circle cx="280" cy="15" r="1" fill="#fff" opacity="0.8"/>
+            <circle cx="340" cy="40" r="1.5" fill="#A78BFA" opacity="0.7"/>
+            <circle cx="370" cy="80" r="1" fill="#FFD23F" opacity="0.6"/>
+            <circle cx="20" cy="100" r="1.5" fill="#fff" opacity="0.5"/>
+            <circle cx="320" cy="100" r="1" fill="#4ECDC4" opacity="0.7"/>
+            <circle cx="60" cy="160" r="1.5" fill="#FFD23F" opacity="0.7"/>
+            <circle cx="370" cy="160" r="1" fill="#fff" opacity="0.6"/>
+            <circle cx="15" cy="220" r="1" fill="#A78BFA" opacity="0.6"/>
+            <circle cx="385" cy="240" r="1.5" fill="#FFD23F" opacity="0.5"/>
+
+            <!-- Moon surface arc at bottom -->
+            <path d="M -30 520 Q 200 440 430 520 L 430 620 L -30 620 Z"
+                  fill="url(#loginMoon)"/>
+            <!-- Craters -->
+            <ellipse cx="80" cy="530" rx="25" ry="8" fill="#C0C9D8" opacity="0.7"/>
+            <ellipse cx="240" cy="518" rx="32" ry="10" fill="#C0C9D8" opacity="0.6"/>
+            <ellipse cx="360" cy="526" rx="20" ry="6" fill="#C0C9D8" opacity="0.7"/>
+
+            <!-- Large moon in background -->
+            <circle cx="200" cy="200" r="110" fill="url(#loginMoon)" opacity="0.15"/>
+            <circle cx="200" cy="200" r="110" fill="none"
+                    stroke="rgba(255,255,255,0.2)" stroke-width="1.5"
+                    stroke-dasharray="10,6"/>
+
+            <!-- Earth (top right) -->
+            <circle cx="330" cy="70" r="35" fill="url(#loginEarth)" opacity="0.9"/>
+            <circle cx="338" cy="60" r="10" fill="#4CAF50" opacity="0.4"/>
+            <ellipse cx="330" cy="70" rx="50" ry="14" fill="none"
+                     stroke="rgba(255,255,255,0.25)" stroke-width="1.5"
+                     stroke-dasharray="7,5"/>
+
+            <!-- Astronaut -->
+            <g class="astronaut-float" style="animation:float 4s ease-in-out infinite">
+                <g transform="translate(130, 320)">
+                    <!-- Helmet -->
+                    <circle cx="60" cy="30" r="32" fill="#E8EDF5" stroke="#C8D0E0" stroke-width="2"/>
+                    <ellipse cx="60" cy="30" rx="22" ry="18" fill="#4F7CFF" opacity="0.45"/>
+                    <ellipse cx="53" cy="24" rx="7" ry="5" fill="#fff" opacity="0.35"/>
+                    <!-- Body -->
+                    <rect x="35" y="60" width="50" height="52" rx="14" fill="#E8EDF5"
+                          stroke="#C8D0E0" stroke-width="1.5"/>
+                    <!-- Backpack -->
+                    <rect x="22" y="66" width="14" height="32" rx="5" fill="#D0D9E8"
+                          stroke="#B8C2D0" stroke-width="1"/>
+                    <!-- Arms -->
+                    <path d="M 35 72 Q 15 82 20 100" fill="none" stroke="#E8EDF5"
+                          stroke-width="16" stroke-linecap="round"/>
+                    <path d="M 85 72 Q 105 62 100 44" fill="none" stroke="#E8EDF5"
+                          stroke-width="16" stroke-linecap="round"/>
+                    <!-- Legs -->
+                    <path d="M 47 112 Q 40 135 36 150" fill="none" stroke="#E8EDF5"
+                          stroke-width="15" stroke-linecap="round"/>
+                    <path d="M 73 112 Q 80 135 84 150" fill="none" stroke="#E8EDF5"
+                          stroke-width="15" stroke-linecap="round"/>
+                    <!-- Boots -->
+                    <ellipse cx="36" cy="153" rx="14" ry="6" fill="#D0D9E8"/>
+                    <ellipse cx="84" cy="153" rx="14" ry="6" fill="#D0D9E8"/>
+                    <!-- Chest -->
+                    <circle cx="60" cy="80" r="8" fill="#FF6B6B" opacity="0.7"/>
+                </g>
+            </g>
+        </svg>
+
+        <div class="auth-left-content">
+            <div class="brand-name">🌙 Anveshak</div>
+            <div class="brand-tagline">"Navigate the Moon. Discover the Universe."</div>
+        </div>
+    </div>
+
+    <!-- Right panel: login form -->
+    <div class="auth-split__right">
+        <div class="auth-card">
+            <h2 class="auth-card__title">Welcome Back! 👋</h2>
+            <p class="auth-card__sub">Sign in to your institute account</p>
+
+            {% if error %}
+            <div class="alert alert--error">⚠ {{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/auth/login" class="auth-form">
+                <div class="form-group">
+                    <label class="field-label" for="login-email">Email Address</label>
+                    <input type="email" id="login-email" name="email" class="field-input"
+                           required placeholder="you@institute.edu"
+                           autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <label class="field-label" for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" class="field-input"
+                           required placeholder="••••••••"
+                           autocomplete="current-password" />
+                </div>
+                <label class="remember-me">
+                    <input type="checkbox" name="remember" /> Remember me
+                </label>
+                <button type="submit" class="btn btn--primary btn--block" style="margin-top:0.5rem">
+                    Sign In →
+                </button>
+            </form>
+
+            <p class="auth-card__switch">
+                Don't have an account?
+                <a href="/signup">Sign up for free</a>
+            </p>
+            <p class="auth-card__skip">
+                <a href="/planner">Continue without account →</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

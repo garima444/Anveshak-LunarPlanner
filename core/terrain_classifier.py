@@ -402,7 +402,7 @@ def train_classifier(
 
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(clf, MODEL_PATH)
-    print(f"[classifier] Model saved → {MODEL_PATH}")
+    print(f"[classifier] Model saved -> {MODEL_PATH}")
 
     return clf, metrics
 
@@ -588,5 +588,5 @@ if __name__ == "__main__":
         f"<html><body style='background:#111'>{html}</body></html>",
         encoding="utf-8",
     )
-    print(f"\nPreview saved → {_out_path}")
-    print(f"Model saved   → {MODEL_PATH}")
+    print(f"\nPreview saved -> {_out_path}")
+    print(f"Model saved   -> {MODEL_PATH}")

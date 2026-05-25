@@ -91,6 +91,9 @@ def create_mission_map(
     path: list[tuple[int, int]] | None,
     path_stats: dict | None,
     profile: dict,
+    recharge_stops: list[dict] | None = None,
+    aoi_bounds: dict | None = None,
+    dest_used: dict | None = None,
 ) -> str:
     """Build a Plotly mission map and return an embeddable HTML string.
 
@@ -100,7 +103,17 @@ def create_mission_map(
       3. Landing score overlay (toggleable)
       4. Landing site markers (up to 3 tier traces)
       5. Rover path + start/goal markers (if path is not None)
-      6. Path stats annotation (if path_stats is not None)
+      6. Recharge stop markers — orange diamonds (solar rovers only)
+      7. Path stats annotation (if path_stats is not None)
+      8. AOI bounding box (dashed amber rectangle, if aoi_bounds is provided)
+      9. Destination marker (magenta star, if dest_used is provided)
+
+    Parameters
+    ----------
+    aoi_bounds : dict | None
+        Keys: lat_min, lat_max, lon_min, lon_max — geographic AOI sub-region.
+    dest_used : dict | None
+        Keys: lat, lon — user-specified mission destination coordinate.
 
     Returns
     -------
@@ -223,6 +236,89 @@ def create_mission_map(
             name="Goal",
             hovertemplate="Goal<extra></extra>",
         ))
+
+    # ---- 6. Recharge stop markers (solar rovers only) -----------------------
+    if recharge_stops:
+        stop_x = [s["pixel_col"] / stride for s in recharge_stops]
+        stop_y = [s["pixel_row"] / stride for s in recharge_stops]
+        hover_stops = []
+        for i, s in enumerate(recharge_stops):
+            t = s["recharge_time_hrs"]
+            time_str = f"{t:.2f} h" if t is not None else "NO VIABLE CHARGE"
+            hover_stops.append(
+                f"Recharge Stop #{i + 1}<br>"
+                f"Lat: {s['lat']:.3f}° Lon: {s['lon']:.3f}°<br>"
+                f"Illumination: {s['illumination_frac'] * 100:.1f}%<br>"
+                f"P_charge: {s['P_charge_w']:.1f} W | "
+                f"Net rate: {s['net_charge_rate_wh_hr']:.1f} Wh/h<br>"
+                f"SoC at stop: {s['battery_at_stop_pct']:.1f}%<br>"
+                f"Energy gained: {s['energy_gained_wh']:.1f} Wh<br>"
+                f"Est. recharge time: {time_str}"
+            )
+        traces.append(go.Scatter(
+            x=stop_x,
+            y=stop_y,
+            mode="markers",
+            marker=dict(symbol="diamond", color="orange", size=11,
+                        line=dict(color="black", width=1)),
+            name="Recharge Stops",
+            text=hover_stops,
+            hovertemplate="%{text}<extra></extra>",
+        ))
+
+    # ---- 7. AOI bounding box (dashed amber rectangle) -----------------------
+    # Represented as a scatter loop connecting the four corners so it works
+    # inside the pixel-index coordinate system of the heatmap.
+    _aoi_shapes = []
+    if aoi_bounds:
+        try:
+            from core.terrain import latlon_to_pixel as _l2p  # noqa: PLC0415
+            corners_latlon = [
+                (aoi_bounds["lon_min"], aoi_bounds["lat_min"]),
+                (aoi_bounds["lon_max"], aoi_bounds["lat_min"]),
+                (aoi_bounds["lon_max"], aoi_bounds["lat_max"]),
+                (aoi_bounds["lon_min"], aoi_bounds["lat_max"]),
+                (aoi_bounds["lon_min"], aoi_bounds["lat_min"]),  # close loop
+            ]
+            aoi_xs, aoi_ys = [], []
+            for lon, lat in corners_latlon:
+                r, c = _l2p(lon, lat, profile)
+                aoi_xs.append(c / stride)
+                aoi_ys.append(r / stride)
+            traces.append(go.Scatter(
+                x=aoi_xs,
+                y=aoi_ys,
+                mode="lines",
+                line=dict(color="#e8a020", width=2, dash="dash"),
+                name="Area of Interest",
+                hoverinfo="skip",
+            ))
+        except Exception:
+            pass  # AOI box is cosmetic — don't crash the map if conversion fails
+
+    # ---- 8. User-specified destination marker --------------------------------
+    if dest_used:
+        try:
+            from core.terrain import latlon_to_pixel as _l2p  # noqa: PLC0415
+            dr, dc = _l2p(dest_used["lon"], dest_used["lat"], profile)
+            traces.append(go.Scatter(
+                x=[dc / stride],
+                y=[dr / stride],
+                mode="markers+text",
+                marker=dict(symbol="star", color="magenta", size=14,
+                            line=dict(color="white", width=1)),
+                text=["Destination"],
+                textposition="top center",
+                textfont=dict(color="magenta", size=11),
+                name="Mission Destination",
+                hovertemplate=(
+                    f"Mission Destination<br>"
+                    f"Lat: {dest_used['lat']:.3f}°  Lon: {dest_used['lon']:.3f}°"
+                    "<extra></extra>"
+                ),
+            ))
+        except Exception:
+            pass  # destination marker is cosmetic
 
     fig = go.Figure(data=traces)
 

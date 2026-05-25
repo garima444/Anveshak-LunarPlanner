@@ -1,0 +1,53 @@
+{
+  "test_name": "Energy Model Validation",
+  "sub_results": {
+    "7a": {
+      "n_steps": 50,
+      "actual_energy_wh": 600.0,
+      "expected_energy_wh": 600.0,
+      "pct_error": 0.0,
+      "result": "PASS",
+      "notes": "actual=600.0000 Wh, expected=600.0000 Wh, err=0.0000%"
+    },
+    "7b": {
+      "flat_energy_wh": 120.0,
+      "uphill_energy_wh": 182.5133,
+      "actual_ratio": 1.5209,
+      "expected_ratio": 1.5209,
+      "pct_error": 0.0,
+      "result": "PASS",
+      "notes": "ratio=1.5209, expected=1.5209, err=0.00%"
+    },
+    "7c": {
+      "downhill_regen_wh": 9.3175,
+      "downhill_total_wh": 110.6825,
+      "flat_baseline_wh": 120.0,
+      "regen_positive": true,
+      "downhill_cheaper_than_flat": true,
+      "regen_fraction_model": 0.3,
+      "result": "PASS",
+      "notes": "regen=9.3175 Wh, down=110.6825 Wh < flat=120.0000 Wh. REGEN_FRACTION=0.30 (physical bounds: 0.40-0.85 is ideal; current model uses 0.30 \u2014 may be conservative)."
+    },
+    "7d": {
+      "energy_10steps_wh": 120.0,
+      "energy_20steps_wh": 240.0,
+      "ratio": 2.0,
+      "pct_error": 0.0,
+      "result": "PASS",
+      "notes": "ratio=2.0000, expected=2.0, err=0.0000%"
+    },
+    "7e": {
+      "low_pct": 36.0,
+      "low_risk": "LOW",
+      "mod_pct": 60.0,
+      "mod_risk": "MODERATE",
+      "high_pct": 96.0,
+      "high_risk": "HIGH",
+      "result": "PASS",
+      "notes": "LOW=LOW/36.0%, MOD=MODERATE/60.0%, HIGH=HIGH/96.0%"
+    }
+  },
+  "base_power_reference": "BASE_POWER_W=100.0 W (VIPER ref: ~100-130 W, Artemis ref: ~200 W)",
+  "result": "PASS",
+  "notes": "Sub-tests: 7a=PASS, 7b=PASS, 7c=PASS, 7d=PASS, 7e=PASS"
+}

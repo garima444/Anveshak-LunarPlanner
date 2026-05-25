@@ -166,24 +166,25 @@ DEM_REGIONS: dict[str, dict] = {
         "citation":       "NASA PDS LRO-L-LOLA-4-GDR-V1.0 / LDEM_75S product",
     },
     "south_pole_80_90": {
-        "label":          "South Pole 80–90°S · 60 m/px",
+        "label":          "South Pole 80–90°S · 100 m/px",
         "description":    (
             "NASA LOLA 20 m/px JP2, covers 80–90°S full polar cap. "
             "Best baseline for south-pole mission planning (VIPER, Artemis 3, Chang'e-7). "
-            "30400×30400 native pixels downsampled to 10133×10133 at 60 m/px."
+            "30400×30400 native pixels downsampled to 6080×6080 at 100 m/px "
+            "(factor-5 downsample; 60 m requires >3 GB RAM — use a larger instance for that)."
         ),
         "coverage":       "80°–90°S",
         "dem_path":       BASE / "data" / "dem" / "DEM_20M" / "LDEM_80S_20M.JP2",
         "count_path":     BASE / "data" / "dem" / "DEM_20M" / "LDEC_80S_20M.JP2",
         "native_res_m":   20.0,
-        "working_res_m":  60.0,
+        "working_res_m":  100.0,          # factor-5: 6080×6080 = 148 MB/array (was 60 m = 410 MB)
         "proj_offset_px": 15199.5,        # LBL: LINE_PROJECTION_OFFSET
         "dn_scale":       0.5,            # LBL: SCALING_FACTOR
         "is_geotiff":     False,
         "ancillary_band": "75S",
         "size_mb":        256,
-        "peak_ram_mb":    500,
-        "load_time_s":    "30–60",
+        "peak_ram_mb":    800,
+        "load_time_s":    "20–40",
         "warn":           None,
         "citation":       "NASA PDS LRO-L-LOLA-4-GDR-V1.0 / LDEM_80S_20M_JP2.LBL",
     },

@@ -1,0 +1,406 @@
+{
+  "test_name": "Section 5: Mission Combination Matrix",
+  "result": "WARN",
+  "notes": "8/8 valid combinations PASS | invalid correctly handled",
+  "passed": 39,
+  "total": 49,
+  "checks": [
+    {
+      "check": "C1 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C1 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.677]",
+      "expected": ""
+    },
+    {
+      "check": "C1 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "10",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C1 path feasible",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C1 battery \u2264 100%",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C1 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C2 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C2 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.677]",
+      "expected": ""
+    },
+    {
+      "check": "C2 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "10",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C2 path feasible",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C2 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C2 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C3 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C3 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.673]",
+      "expected": ""
+    },
+    {
+      "check": "C3 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "10",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C3 path feasible",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C3 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C3 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C4 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C4 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.588]",
+      "expected": ""
+    },
+    {
+      "check": "C4 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "10",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C4 path feasible",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C4 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C4 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C5 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C5 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.581]",
+      "expected": ""
+    },
+    {
+      "check": "C5 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "7",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C5 path feasible",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C5 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C5 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C6 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C6 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.581]",
+      "expected": ""
+    },
+    {
+      "check": "C6 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "7",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C6 path feasible",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C6 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C6 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C7 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C7 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.940]",
+      "expected": ""
+    },
+    {
+      "check": "C7 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "7",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C7 path feasible",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C7 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C7 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C8 score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C8 score range [0,1]",
+      "result": "PASS",
+      "value": "[0.000,0.940]",
+      "expected": ""
+    },
+    {
+      "check": "C8 top_sites \u2265 1",
+      "result": "PASS",
+      "value": "7",
+      "expected": "\u2265 1"
+    },
+    {
+      "check": "C8 path feasible",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C8 battery \u2264 100%",
+      "result": "FAIL",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "C8 report generated",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "INVALID combo handled",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    }
+  ],
+  "combination_results": [
+    {
+      "id": "C1",
+      "label": "C1",
+      "analog": "Chang'e-7 ice-sampler",
+      "mission": "water_ice",
+      "power": "rtg",
+      "psr": "enter",
+      "score_ok": true,
+      "path_ok": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "C2",
+      "label": "C2",
+      "analog": "NASA VIPER-RTG concept",
+      "mission": "water_ice",
+      "power": "rtg",
+      "psr": "rim",
+      "score_ok": true,
+      "path_ok": true,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C3",
+      "label": "C3",
+      "analog": "VIPER solar",
+      "mission": "water_ice",
+      "power": "solar",
+      "psr": "rim",
+      "score_ok": true,
+      "path_ok": true,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C4",
+      "label": "C4",
+      "analog": "Pragyan / IM-2",
+      "mission": "water_ice",
+      "power": "solar",
+      "psr": "avoid",
+      "score_ok": true,
+      "path_ok": false,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C5",
+      "label": "C5",
+      "analog": "Artemis LTV",
+      "mission": "geological",
+      "power": "rtg",
+      "psr": "rim",
+      "score_ok": true,
+      "path_ok": true,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C6",
+      "label": "C6",
+      "analog": "Chang'e-4 / Yutu-2",
+      "mission": "geological",
+      "power": "solar",
+      "psr": "avoid",
+      "score_ok": true,
+      "path_ok": true,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C7",
+      "label": "C7",
+      "analog": "Luna-27",
+      "mission": "atmospheric",
+      "power": "rtg",
+      "psr": "avoid",
+      "score_ok": true,
+      "path_ok": false,
+      "verdict": "WARN"
+    },
+    {
+      "id": "C8",
+      "label": "C8",
+      "analog": "Generic solar",
+      "mission": "atmospheric",
+      "power": "solar",
+      "psr": "avoid",
+      "score_ok": true,
+      "path_ok": false,
+      "verdict": "WARN"
+    },
+    {
+      "id": "INVALID",
+      "label": "!!",
+      "analog": "INVALID",
+      "verdict": "PASS"
+    }
+  ],
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\05_combination_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\05_combination_matrix_grid.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\05_combination_summary_table.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\05_combination_matrix.txt",
+  "_elapsed_s": 15.21
+}

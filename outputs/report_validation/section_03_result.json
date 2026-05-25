@@ -1,0 +1,154 @@
+{
+  "test_name": "Section 3: Historical Mission Validation",
+  "result": "PASS",
+  "notes": "4/4 missions validated (VIPER \u00b7 Chang'e-7 \u00b7 Artemis III \u00b7 Chandrayaan-3) | DEM: REAL",
+  "passed": 14,
+  "total": 14,
+  "checks": [
+    {
+      "check": "score_terrain succeeds",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "VIPER site percentile",
+      "result": "PASS",
+      "value": "52.6th",
+      "expected": ""
+    },
+    {
+      "check": "VIPER traverse",
+      "result": "PASS",
+      "value": "13.55km",
+      "expected": "\u224820.00km"
+    },
+    {
+      "check": "Chang'e-7 site percentile",
+      "result": "PASS",
+      "value": "99.5th",
+      "expected": ""
+    },
+    {
+      "check": "Chang'e-7 traverse",
+      "result": "PASS",
+      "value": "0.10km",
+      "expected": "\u22480.06km"
+    },
+    {
+      "check": "Chang'e-7 PSR",
+      "result": "PASS",
+      "value": "1.00",
+      "expected": "\u2265 0.5"
+    },
+    {
+      "check": "Artemis III site percentile",
+      "result": "PASS",
+      "value": "98.7th",
+      "expected": ""
+    },
+    {
+      "check": "Artemis III traverse",
+      "result": "PASS",
+      "value": "3.10km",
+      "expected": "\u22485.00km"
+    },
+    {
+      "check": "C3 pixel in bounds",
+      "result": "PASS",
+      "value": "(1654,5290)",
+      "expected": "0\u20267760\u00d77760"
+    },
+    {
+      "check": "C3 slope \u2264 12\u00b0",
+      "result": "PASS",
+      "value": "1.60\u00b0",
+      "expected": "\u2264 12\u00b0"
+    },
+    {
+      "check": "C3 roughness \u2264 5.0m",
+      "result": "PASS",
+      "value": "4.966m",
+      "expected": "\u2264 5.0m"
+    },
+    {
+      "check": "C3 illuminated (solar rover)",
+      "result": "PASS",
+      "value": "0.542",
+      "expected": "> 0.1"
+    },
+    {
+      "check": "C3 not in PSR",
+      "result": "PASS",
+      "value": "0.000",
+      "expected": "< 0.5"
+    },
+    {
+      "check": "C3 site percentile",
+      "result": "PASS",
+      "value": "56.1th",
+      "expected": "\u2265 40.0th"
+    }
+  ],
+  "missions": [
+    {
+      "id": "VIPER",
+      "agency": "NASA",
+      "site_percentile": 52.6,
+      "site_pct_pass": true,
+      "computed_km": 13.55,
+      "traverse_pass": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "Chang'e-7",
+      "agency": "CNSA",
+      "site_percentile": 99.5,
+      "site_pct_pass": true,
+      "computed_km": 0.1,
+      "traverse_pass": true,
+      "psr_val": 1.0,
+      "psr_pass": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "Artemis III",
+      "agency": "NASA",
+      "site_percentile": 98.7,
+      "site_pct_pass": true,
+      "computed_km": 3.1,
+      "traverse_pass": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "Chandrayaan-3",
+      "agency": "ISRO",
+      "status": "Landed 2023-08-23 (Shiv Shakti Point)",
+      "source": "Bhandari et al. 2023, Nature 623:241",
+      "pixel": [
+        1654,
+        5290
+      ],
+      "slope_deg": 1.6,
+      "roughness_m": 4.966,
+      "illumination": 0.542,
+      "psr_val": 0.0,
+      "site_percentile": 56.1,
+      "site_pct_pass": true,
+      "verdict": "PASS",
+      "computed_km": "N/A (lander + 100 m rover)",
+      "traverse_pass": true
+    }
+  ],
+  "n_missions_validated": 4,
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03a_viper_map.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03c_change-7_map.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03b_artemisiii_map.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03e_chandrayaan3_map.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03d_validation_summary_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\03d_validation_summary_table.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\03_historical_missions.txt",
+  "_elapsed_s": 343.67
+}

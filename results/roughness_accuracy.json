@@ -1,0 +1,35 @@
+{
+  "test_name": "Roughness Computation Accuracy",
+  "sub_results": {
+    "9a": {
+      "max_roughness_m": 0.0,
+      "tolerance_m": 0.01,
+      "result": "PASS",
+      "notes": "max_roughness=0.000000m, tolerance=0.01m"
+    },
+    "9b": {
+      "mean_interior_roughness_m": 49.6904,
+      "min_interior_roughness_m": 49.6904,
+      "max_interior_roughness_m": 49.6904,
+      "expected_range_m": [
+        40.0,
+        55.0
+      ],
+      "result": "PASS",
+      "notes": "mean_rough=49.6904m, expected in [40,55]"
+    },
+    "9c": {
+      "nan_pixels_have_nan_roughness": true,
+      "sample_far_pixel": [
+        0,
+        2
+      ],
+      "far_roughness_m": 0.0,
+      "far_pixel_near_zero": true,
+      "result": "PASS",
+      "notes": "NaN preserved=True, far_rough=0.0000m"
+    }
+  },
+  "result": "PASS",
+  "notes": "Sub-tests: 9a=PASS, 9b=PASS, 9c=PASS"
+}

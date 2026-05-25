@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block nav_links %}
+<ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/#features">Features</a></li>
+</ul>
+{% endblock %}
+
+{% block nav_auth %}
+<div class="nav-auth">
+    <span style="font-size:0.88rem;color:var(--text-muted)">Already have an account?</span>
+    <a href="/login" class="btn btn--outline btn--sm">Sign In →</a>
+</div>
+{% endblock %}
+
+{% block main_attrs %}class="auth-page"{% endblock %}
+
+{% block content %}
+<div class="auth-split">
+    <!-- Left panel: space illustration -->
+    <div class="auth-split__left">
+        <!-- Floating stars -->
+        <span class="float-star" style="top:6%;left:12%;--tw-dur:2.1s">✦</span>
+        <span class="float-star" style="top:18%;right:10%;--tw-dur:1.9s;--tw-delay:0.3s">✦</span>
+        <span class="float-star" style="top:60%;left:6%;--tw-dur:2.6s;--tw-delay:0.9s">✦</span>
+        <span class="float-star" style="top:78%;right:14%;--tw-dur:2.2s;--tw-delay:0.5s">✦</span>
+        <span class="float-star" style="top:35%;left:4%;--tw-dur:3.2s;--tw-delay:1.2s;font-size:0.65rem">✦</span>
+        <span class="float-star" style="top:48%;right:4%;--tw-dur:2.4s;font-size:0.65rem">✦</span>
+
+        <svg class="auth-space-art" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="signupMoon" cx="40%" cy="35%" r="60%">
+                    <stop offset="0%" stop-color="#E8EDF5"/>
+                    <stop offset="100%" stop-color="#B0BAC8"/>
+                </radialGradient>
+                <radialGradient id="signupEarth" cx="50%" cy="30%" r="60%">
+                    <stop offset="0%" stop-color="#4FC3F7"/>
+                    <stop offset="60%" stop-color="#29B6F6"/>
+                    <stop offset="100%" stop-color="#1565C0"/>
+                </radialGradient>
+            </defs>
+
+            <!-- Stars -->
+            <circle cx="50" cy="35" r="1.5" fill="#FFD23F" opacity="0.8"/>
+            <circle cx="120" cy="18" r="1" fill="#fff" opacity="0.7"/>
+            <circle cx="200" cy="28" r="1.5" fill="#A78BFA" opacity="0.7"/>
+            <circle cx="290" cy="12" r="1" fill="#fff" opacity="0.8"/>
+            <circle cx="360" cy="38" r="1.5" fill="#FFD23F" opacity="0.6"/>
+            <circle cx="380" cy="90" r="1" fill="#4ECDC4" opacity="0.7"/>
+            <circle cx="25" cy="120" r="1.5" fill="#fff" opacity="0.5"/>
+            <circle cx="350" cy="110" r="1" fill="#FFD23F" opacity="0.6"/>
+            <circle cx="70" cy="180" r="1.5" fill="#A78BFA" opacity="0.6"/>
+            <circle cx="375" cy="190" r="1" fill="#fff" opacity="0.7"/>
+            <circle cx="10" cy="250" r="1" fill="#FFD23F" opacity="0.5"/>
+            <circle cx="390" cy="260" r="1.5" fill="#4ECDC4" opacity="0.5"/>
+
+            <!-- Moon surface at bottom -->
+            <path d="M -30 510 Q 200 430 430 510 L 430 620 L -30 620 Z"
+                  fill="url(#signupMoon)"/>
+            <!-- Craters -->
+            <ellipse cx="70" cy="522" rx="22" ry="7" fill="#C0C9D8" opacity="0.7"/>
+            <ellipse cx="200" cy="508" rx="28" ry="9" fill="#C0C9D8" opacity="0.6"/>
+            <ellipse cx="350" cy="518" rx="18" ry="6" fill="#C0C9D8" opacity="0.7"/>
+
+            <!-- Large moon background glow -->
+            <circle cx="200" cy="210" r="120" fill="url(#signupMoon)" opacity="0.12"/>
+            <circle cx="200" cy="210" r="120" fill="none"
+                    stroke="rgba(255,255,255,0.18)" stroke-width="1.5"
+                    stroke-dasharray="10,6"/>
+
+            <!-- Earth -->
+            <circle cx="310" cy="65" r="32" fill="url(#signupEarth)" opacity="0.9"/>
+            <circle cx="318" cy="55" r="9" fill="#4CAF50" opacity="0.4"/>
+            <ellipse cx="310" cy="65" rx="46" ry="13" fill="none"
+                     stroke="rgba(255,255,255,0.25)" stroke-width="1.5"
+                     stroke-dasharray="7,5"/>
+
+            <!-- Rover on surface -->
+            <g transform="translate(60, 430)">
+                <!-- Wheels -->
+                <circle cx="12" cy="44" r="11" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                <circle cx="12" cy="44" r="5" fill="#718096"/>
+                <circle cx="55" cy="44" r="11" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                <circle cx="55" cy="44" r="5" fill="#718096"/>
+                <circle cx="98" cy="44" r="11" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                <circle cx="98" cy="44" r="5" fill="#718096"/>
+                <!-- Body -->
+                <rect x="5" y="16" width="100" height="30" rx="7" fill="#5A6070"
+                      stroke="#4A5568" stroke-width="1.5"/>
+                <!-- Solar panel -->
+                <rect x="15" y="6" width="80" height="14" rx="3" fill="#4F7CFF"
+                      opacity="0.85" stroke="#3A63E8" stroke-width="1"/>
+                <line x1="32" y1="6" x2="32" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                <line x1="49" y1="6" x2="49" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                <line x1="66" y1="6" x2="66" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                <line x1="83" y1="6" x2="83" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                <!-- Antenna -->
+                <line x1="88" y1="6" x2="88" y2="-14" stroke="#718096" stroke-width="2"/>
+                <circle cx="88" cy="-16" r="3.5" fill="#FFD23F"/>
+                <!-- Camera -->
+                <circle cx="105" cy="28" r="6" fill="#2D3748"/>
+                <circle cx="105" cy="28" r="3.5" fill="#4ECDC4" opacity="0.7"/>
+            </g>
+
+            <!-- Satellite orbiting -->
+            <g transform="translate(100, 140) rotate(-20)">
+                <rect x="-5" y="-5" width="10" height="10" rx="2" fill="#5A6070"/>
+                <rect x="-30" y="-3" width="22" height="6" rx="2" fill="#4F7CFF" opacity="0.8"/>
+                <rect x="8" y="-3" width="22" height="6" rx="2" fill="#4F7CFF" opacity="0.8"/>
+            </g>
+
+            <!-- Dotted orbit for satellite -->
+            <ellipse cx="200" cy="120" rx="140" ry="40" fill="none"
+                     stroke="rgba(167,139,250,0.2)" stroke-width="1.5"
+                     stroke-dasharray="8,5"/>
+        </svg>
+
+        <div class="auth-left-content">
+            <div class="brand-name">🌙 Anveshak</div>
+            <div class="brand-tagline">"Your Mission Starts Here."</div>
+        </div>
+    </div>
+
+    <!-- Right panel: signup form -->
+    <div class="auth-split__right">
+        <div class="auth-card">
+            <h2 class="auth-card__title">Join Anveshak 🚀</h2>
+            <p class="auth-card__sub">Create your institute account — it's free!</p>
+
+            {% if error %}
+            <div class="alert alert--error">⚠ {{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/auth/signup" class="auth-form">
+                <div class="form-group">
+                    <label class="field-label" for="su-institute">Institute / Organisation</label>
+                    <input type="text" id="su-institute" name="institute" class="field-input"
+                           required placeholder="IIT Bombay, ISRO, NASA JPL..."
+                           autocomplete="organization" />
+                </div>
+                <div class="form-group">
+                    <label class="field-label" for="su-email">Email Address</label>
+                    <input type="email" id="su-email" name="email" class="field-input"
+                           required placeholder="you@institute.edu"
+                           autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <label class="field-label" for="su-password">Password</label>
+                    <input type="password" id="su-password" name="password" class="field-input"
+                           required placeholder="At least 6 characters"
+                           autocomplete="new-password"
+                           minlength="6" />
+                    <p class="password-hint">Minimum 6 characters. Keep it secure! 🔒</p>
+                </div>
+                <div class="form-group">
+                    <label class="field-label" for="su-confirm">Confirm Password</label>
+                    <input type="password" id="su-confirm" name="confirm_password" class="field-input"
+                           required placeholder="••••••••"
+                           autocomplete="new-password" />
+                    <p class="password-hint" id="pw-match-msg" style="color:var(--coral)"></p>
+                </div>
+                <button type="submit" class="btn btn--primary btn--block"
+                        style="margin-top:0.5rem" id="signup-btn">
+                    Create Account →
+                </button>
+            </form>
+
+            <p class="auth-card__switch">
+                Already have an account?
+                <a href="/login">Sign in here</a>
+            </p>
+            <p class="auth-card__skip">
+                <a href="/planner">Continue without account →</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Client-side password confirmation check
+const pw = document.getElementById('su-password');
+const confirm = document.getElementById('su-confirm');
+const matchMsg = document.getElementById('pw-match-msg');
+const submitBtn = document.getElementById('signup-btn');
+
+function checkPasswords() {
+    if (!confirm.value) { matchMsg.textContent = ''; return; }
+    if (pw.value !== confirm.value) {
+        matchMsg.textContent = '⚠ Passwords do not match.';
+        submitBtn.disabled = true;
+    } else {
+        matchMsg.textContent = '✓ Passwords match!';
+        matchMsg.style.color = 'var(--mint)';
+        submitBtn.disabled = false;
+    }
+}
+
+pw.addEventListener('input', checkPasswords);
+confirm.addEventListener('input', checkPasswords);
+</script>
+{% endblock %}

@@ -337,6 +337,11 @@
                         <option value="upload">Upload Custom DEM…</option>
                     </select>
                     <div class="dem-warn" id="dem-warn-box"></div>
+                    <!-- Coverage banner shown below the selector after region change -->
+                    <div id="dem-coverage-banner" style="display:none;margin-top:0.4rem;
+                         font-size:0.78rem;color:var(--text-dim,#888);padding:0.3rem 0.5rem;
+                         background:rgba(79,158,248,0.07);border-radius:5px;border-left:2px solid #4f9ef8">
+                    </div>
                 </div>
             </div>
 
@@ -752,16 +757,13 @@ function updateDemCoverageBanner() {
     }
     banner.style.display = 'block';
 
-    // If AOI is enabled, populate defaults from coverage
-    if (document.getElementById('aoi-enable').checked && cov.lat_min !== null) {
-        const aoiLatMin = document.getElementById('aoi-lat-min');
-        const aoiLatMax = document.getElementById('aoi-lat-max');
-        const aoiLonMin = document.getElementById('aoi-lon-min');
-        const aoiLonMax = document.getElementById('aoi-lon-max');
-        if (!aoiLatMin.value) aoiLatMin.value = cov.lat_min;
-        if (!aoiLatMax.value) aoiLatMax.value = cov.lat_max;
-        if (!aoiLonMin.value) aoiLonMin.value = cov.lon_min;
-        if (!aoiLonMax.value) aoiLonMax.value = cov.lon_max;
+    // If focus area is enabled, pre-fill lat bounds from region coverage
+    const focusEl = document.getElementById('focus-enable');
+    if (focusEl && focusEl.checked && cov.lat_min !== null) {
+        const latMin = document.getElementById('focus-lat-min');
+        const latMax = document.getElementById('focus-lat-max');
+        if (latMin && !latMin.value) latMin.value = cov.lat_min;
+        if (latMax && !latMax.value) latMax.value = cov.lat_max;
     }
 }
 

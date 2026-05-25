@@ -163,7 +163,8 @@ def load_fused(use_preview: bool = True) -> dict:
     print("Loading Stage1 20 m slope …")
     raw1_slp, _ = _load_jp2_raw(PATHS["slope_20m"])
     scaled1_slp = _scale_jp2(raw1_slp)
-    slope1 = _resample_to_ref(scaled1_slp, affine1, ref_crs, ref_profile)
+    slope1 = _resample_to_ref(scaled
+    1_slp, affine1, ref_crs, ref_profile)
     del raw1_slp, scaled1_slp
 
     # ------------------------------------------------------------------

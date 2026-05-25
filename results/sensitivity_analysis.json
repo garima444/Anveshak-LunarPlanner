@@ -1,0 +1,5 @@
+{
+  "test_name": "Scoring Weight Sensitivity Analysis",
+  "result": "FAIL",
+  "notes": "Exception: Unable to allocate 392. MiB for an array with shape (10133, 10131) and data type float32\nTraceback (most recent call last):\n  File \"Z:\\Anveshak\\validation\\test_sensitivity.py\", line 166, in run\n    mission_score = _compute_mission_score(\n        elevation, slope, roughness, lat_grid,\n        rover_profile[\"mission_type\"], rover_profile[\"power_source\"], res_m,\n        sunlight_map=sunlight_map,\n    )\n  File \"Z:\\Anveshak\\core\\landing_scorer.py\", line 423, in _compute_mission_score\n    gx[:, 1:-1] = (elev_f[:, 2:] - elev_f[:, :-2]) * np.float32(0.5)\n                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~\nnumpy._core._exceptions._ArrayMemoryError: Unable to allocate 392. MiB for an array with shape (10133, 10131) and data type float32\n"
+}

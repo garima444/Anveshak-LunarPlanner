@@ -1,0 +1,427 @@
+{
+  "test_name": "Scoring Weight Sensitivity Analysis",
+  "crop_size": [
+    500,
+    500
+  ],
+  "baseline_top10_pixels": [
+    [
+      84,
+      349
+    ],
+    [
+      297,
+      412
+    ],
+    [
+      458,
+      59
+    ],
+    [
+      13,
+      489
+    ],
+    [
+      396,
+      44
+    ],
+    [
+      161,
+      488
+    ],
+    [
+      312,
+      59
+    ],
+    [
+      220,
+      141
+    ],
+    [
+      262,
+      88
+    ],
+    [
+      157,
+      161
+    ]
+  ],
+  "per_variant": {
+    "VARIANT_1": {
+      "weights": [
+        0.45,
+        0.25,
+        0.2,
+        0.05,
+        0.05
+      ],
+      "top10_overlap_with_baseline": 9,
+      "spearman_correlation": 0.999741,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          299,
+          415
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ],
+        [
+          157,
+          161
+        ],
+        [
+          226,
+          478
+        ],
+        [
+          10,
+          489
+        ]
+      ]
+    },
+    "VARIANT_2": {
+      "weights": [
+        0.25,
+        0.35,
+        0.2,
+        0.05,
+        0.15
+      ],
+      "top10_overlap_with_baseline": 8,
+      "spearman_correlation": 0.999871,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          298,
+          412
+        ],
+        [
+          350,
+          336
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ],
+        [
+          157,
+          161
+        ],
+        [
+          226,
+          478
+        ]
+      ]
+    },
+    "VARIANT_3": {
+      "weights": [
+        0.35,
+        0.25,
+        0.3,
+        0.05,
+        0.05
+      ],
+      "top10_overlap_with_baseline": 10,
+      "spearman_correlation": 0.999773,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          297,
+          412
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          13,
+          489
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          161,
+          488
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ],
+        [
+          157,
+          161
+        ]
+      ]
+    },
+    "VARIANT_4": {
+      "weights": [
+        0.35,
+        0.15,
+        0.2,
+        0.15,
+        0.15
+      ],
+      "top10_overlap_with_baseline": 6,
+      "spearman_correlation": 0.999994,
+      "top10_pixels": [
+        [
+          81,
+          347
+        ],
+        [
+          300,
+          413
+        ],
+        [
+          350,
+          336
+        ],
+        [
+          10,
+          481
+        ],
+        [
+          196,
+          449
+        ],
+        [
+          147,
+          488
+        ],
+        [
+          413,
+          88
+        ],
+        [
+          301,
+          113
+        ],
+        [
+          10,
+          212
+        ],
+        [
+          380,
+          232
+        ]
+      ]
+    },
+    "VARIANT_5": {
+      "weights": [
+        0.45,
+        0.25,
+        0.1,
+        0.05,
+        0.15
+      ],
+      "top10_overlap_with_baseline": 9,
+      "spearman_correlation": 0.999952,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          297,
+          413
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ],
+        [
+          157,
+          161
+        ],
+        [
+          226,
+          478
+        ],
+        [
+          13,
+          489
+        ]
+      ]
+    },
+    "VARIANT_6": {
+      "weights": [
+        0.35,
+        0.35,
+        0.1,
+        0.05,
+        0.15
+      ],
+      "top10_overlap_with_baseline": 8,
+      "spearman_correlation": 0.999996,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          295,
+          411
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ],
+        [
+          157,
+          161
+        ],
+        [
+          226,
+          478
+        ],
+        [
+          78,
+          146
+        ]
+      ]
+    },
+    "VARIANT_7": {
+      "weights": [
+        0.25,
+        0.25,
+        0.2,
+        0.05,
+        0.25
+      ],
+      "top10_overlap_with_baseline": 9,
+      "spearman_correlation": 0.999534,
+      "top10_pixels": [
+        [
+          84,
+          349
+        ],
+        [
+          303,
+          414
+        ],
+        [
+          350,
+          336
+        ],
+        [
+          10,
+          485
+        ],
+        [
+          190,
+          459
+        ],
+        [
+          458,
+          59
+        ],
+        [
+          396,
+          44
+        ],
+        [
+          312,
+          59
+        ],
+        [
+          220,
+          141
+        ],
+        [
+          262,
+          88
+        ]
+      ]
+    }
+  },
+  "average_overlap": 8.4286,
+  "average_spearman_correlation": 0.999837,
+  "spearman_diagnosis": "WARN: Spearman=0.9998 despite top-10 slope range 4.1\u00b0 \u2014 slope weight may dominate; roughness/PSR/flatness are effectively irrelevant. Consider normalising feature ranges or capping slope weight.",
+  "result": "WARN",
+  "notes": "avg overlap=8.43/10, avg Spearman=0.9998. WARN: Spearman=0.9998 despite top-10 slope range 4.1\u00b0 \u2014 slope weight may dominate; roughness/PSR/flatness are effectively irrelevant. Consider normalising feature ranges or capping slope weight."
+}

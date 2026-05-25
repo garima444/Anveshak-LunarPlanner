@@ -13,6 +13,9 @@ data/
 uploads/
 temp/
 
+# --- User auth database (auto-created on startup) ---
+users.db
+
 # --- Trained ML model binaries ---
 models/*.pkl
 

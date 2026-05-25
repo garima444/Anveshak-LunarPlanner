@@ -14,7 +14,9 @@ from pathlib import Path
 class Config:
     # ------------------------------------------------------------------ Paths
     BASE_DIR         = Path(__file__).parent
-    BUNDLED_DATA_DIR = BASE_DIR / "data" / "bundled"
+    # Ancillary files live directly under data/ in per-product subdirectories.
+    # get_bundled_path() resolves: BUNDLED_DATA_DIR / BUNDLED_FILES[key]
+    BUNDLED_DATA_DIR = BASE_DIR / "data"
     UPLOAD_DIR       = BASE_DIR / "uploads"
     TEMP_DIR         = BASE_DIR / "temp"
     MODEL_DIR        = BASE_DIR / "models"
@@ -63,15 +65,17 @@ class Config:
     }
 
     # ------------------------------- Bundled ancillary file names
-    # Small ancillary files (≤200 MB) pre-bundled with deployment.
+    # Paths are relative to BUNDLED_DATA_DIR (= data/).
     # Keys match the file_map keys used in core/terrain.py load_terrain().
+    # Using 75S products for the 80-90°S DEM: they cover the full 75-90°S extent.
+    # Using 85S products where available for finer spatial resolution.
     BUNDLED_FILES: dict[str, str] = {
-        "psr":              "LPSR_75S_120M_201608.TIF",
-        "illumination":     "AVGVISIB_75S_120M_201608.TIF",
-        "earth_visibility": "AVGVISIB_75S_120M_201608_EARTH.TIF",
-        "sky_visibility":   "SKYV_65S_240M.TIF",
-        "mas_57m":          "MAS_57M_16.JP2",
-        "mas_225m":         "MAS_225M_16.JP2",
-        "mas_560m":         "MAS_560M_16.JP2",
-        "hurst_exponent":   "HE_8.JP2",
+        "psr":              "PSR/LPSR_85S_060M_201608.tiff",
+        "illumination":     "SolarIllumination/AVGVISIB_85S_060M_201608.tiff",
+        "earth_visibility": "EarthVisibility/AVGVISIB_85S_060M_201608_EARTH.tiff",
+        "sky_visibility":   "SkyVisibility/SKYV_65S_240M.tiff",
+        "mas_57m":          "roughness/MAS_57M_16.JP2",
+        "mas_225m":         "roughness/MAS_225M_16.JP2",
+        "mas_560m":         "roughness/MAS_560M_16.JP2",
+        "hurst_exponent":   "roughness/HE_8.JP2",
     }

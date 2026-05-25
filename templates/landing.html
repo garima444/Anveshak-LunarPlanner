@@ -1,0 +1,881 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block nav_links %}
+<ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+</ul>
+{% endblock %}
+
+{% block nav_auth %}
+<div class="nav-auth">
+    {% if user %}
+    <span class="user-chip">🏛️ {{ user.institute }}</span>
+    <a href="/planner" class="btn btn--primary btn--sm">Launch Planner 🚀</a>
+    <a href="/logout" class="btn btn--outline btn--sm">Sign Out</a>
+    {% else %}
+    <a href="/login" class="btn btn--outline btn--sm">Sign In</a>
+    <a href="/signup" class="btn btn--primary btn--sm">Get Started →</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block main_attrs %}{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════
+     HERO SECTION
+═══════════════════════════════════════════ -->
+<section class="hero-section" id="hero">
+    <div class="hero-inner">
+        <!-- Left: Text -->
+        <div class="hero-text">
+            <span class="hero-tag">🚀 India's Lunar Mission Planner</span>
+            <h1 class="hero-headline">
+                Explore the Moon
+                <span class="hero-accent">🌙</span>
+            </h1>
+            <p class="hero-subtext">
+                Configure your rover, discover the best landing sites, plan safe traverses,
+                and estimate energy budgets — powered by NASA LOLA elevation data.
+            </p>
+            <div class="hero-cta">
+                <a href="/planner" class="btn btn--primary btn--lg btn--pulse">Launch Planner 🚀</a>
+                <a href="#features" class="btn btn--outline btn--lg">See Features</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat__num">6</span>
+                    <span class="hero-stat__label">Rover Presets</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__num">NASA</span>
+                    <span class="hero-stat__label">LOLA Data</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__num">5</span>
+                    <span class="hero-stat__label">Science Modes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: SVG Illustration -->
+        <div class="hero-illustration" aria-hidden="true">
+            <!-- Floating stars (decorative) -->
+            <span class="float-star" style="top:8%;left:12%;--tw-dur:2.2s;--tw-delay:0s">✦</span>
+            <span class="float-star" style="top:20%;right:8%;--tw-dur:1.8s;--tw-delay:0.5s">✦</span>
+            <span class="float-star" style="top:5%;right:25%;--tw-dur:2.5s;--tw-delay:1s">✦</span>
+            <span class="float-star" style="top:60%;left:5%;--tw-dur:2s;--tw-delay:0.3s;font-size:0.7rem">✦</span>
+            <span class="float-star" style="top:75%;right:12%;--tw-dur:3s;--tw-delay:0.8s;font-size:0.7rem">✦</span>
+
+            <svg viewBox="0 0 480 400" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
+                <defs>
+                    <radialGradient id="earthGrad" cx="50%" cy="30%" r="60%">
+                        <stop offset="0%" stop-color="#4FC3F7"/>
+                        <stop offset="40%" stop-color="#29B6F6"/>
+                        <stop offset="70%" stop-color="#4CAF50" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#1565C0"/>
+                    </radialGradient>
+                    <radialGradient id="moonGrad" cx="40%" cy="35%" r="60%">
+                        <stop offset="0%" stop-color="#E8EDF5"/>
+                        <stop offset="100%" stop-color="#B0BAC8"/>
+                    </radialGradient>
+                    <radialGradient id="bgGrad" cx="50%" cy="0%" r="80%">
+                        <stop offset="0%" stop-color="#1E1B4B" stop-opacity="0"/>
+                        <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- Stars background -->
+                <circle cx="30" cy="30" r="1.5" fill="#FFD23F" opacity="0.8"/>
+                <circle cx="80" cy="15" r="1" fill="#fff" opacity="0.6"/>
+                <circle cx="140" cy="25" r="1.5" fill="#FFD23F" opacity="0.7"/>
+                <circle cx="200" cy="10" r="1" fill="#fff" opacity="0.8"/>
+                <circle cx="260" cy="30" r="1.5" fill="#FFD23F" opacity="0.6"/>
+                <circle cx="320" cy="15" r="1" fill="#fff" opacity="0.7"/>
+                <circle cx="380" cy="25" r="1.5" fill="#FFD23F" opacity="0.9"/>
+                <circle cx="440" cy="10" r="1" fill="#fff" opacity="0.6"/>
+                <circle cx="60" cy="60" r="1" fill="#fff" opacity="0.5"/>
+                <circle cx="170" cy="55" r="1.5" fill="#A78BFA" opacity="0.7"/>
+                <circle cx="290" cy="50" r="1" fill="#fff" opacity="0.8"/>
+                <circle cx="420" cy="55" r="1.5" fill="#4ECDC4" opacity="0.6"/>
+                <circle cx="10" cy="80" r="1" fill="#FFD23F" opacity="0.5"/>
+                <circle cx="460" cy="80" r="1.5" fill="#fff" opacity="0.7"/>
+
+                <!-- Earth (small, upper right) -->
+                <circle cx="410" cy="50" r="28" fill="url(#earthGrad)" opacity="0.9"/>
+                <circle cx="415" cy="42" r="8" fill="#4CAF50" opacity="0.5"/>
+                <!-- Orbit ring around earth -->
+                <ellipse cx="410" cy="50" rx="42" ry="12" fill="none"
+                         stroke="rgba(79,124,255,0.3)" stroke-width="1.5"
+                         stroke-dasharray="6,4"/>
+
+                <!-- Moon surface arc (background) -->
+                <path d="M -20 380 Q 240 300 500 380 L 500 430 L -20 430 Z"
+                      fill="url(#moonGrad)"/>
+                <!-- Surface texture streaks -->
+                <path d="M 0 390 Q 120 375 240 385 Q 360 395 480 388"
+                      fill="none" stroke="#C8D0E0" stroke-width="1" opacity="0.5"/>
+
+                <!-- Craters on the surface -->
+                <ellipse cx="80" cy="390" rx="22" ry="7" fill="#C0C9D8" opacity="0.8"/>
+                <ellipse cx="80" cy="390" rx="15" ry="4" fill="#B8C2D0" opacity="0.6"/>
+                <ellipse cx="200" cy="375" rx="30" ry="9" fill="#C0C9D8" opacity="0.7"/>
+                <ellipse cx="200" cy="375" rx="20" ry="5" fill="#B5BFD0" opacity="0.5"/>
+                <ellipse cx="340" cy="385" rx="18" ry="6" fill="#C0C9D8" opacity="0.8"/>
+                <ellipse cx="420" cy="395" rx="25" ry="7" fill="#C0C9D8" opacity="0.6"/>
+
+                <!-- Rover body -->
+                <g transform="translate(130, 310)">
+                    <!-- Wheels -->
+                    <circle cx="10" cy="42" r="10" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                    <circle cx="10" cy="42" r="5" fill="#718096"/>
+                    <circle cx="50" cy="42" r="10" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                    <circle cx="50" cy="42" r="5" fill="#718096"/>
+                    <circle cx="90" cy="42" r="10" fill="#4A5568" stroke="#2D3748" stroke-width="1.5"/>
+                    <circle cx="90" cy="42" r="5" fill="#718096"/>
+                    <!-- Body -->
+                    <rect x="5" y="16" width="90" height="28" rx="6" fill="#5A6070"
+                          stroke="#4A5568" stroke-width="1.5"/>
+                    <!-- Top panel (solar) -->
+                    <rect x="15" y="8" width="70" height="12" rx="3" fill="#4F7CFF"
+                          opacity="0.8" stroke="#3A63E8" stroke-width="1"/>
+                    <!-- Solar panel grid lines -->
+                    <line x1="29" y1="8" x2="29" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                    <line x1="43" y1="8" x2="43" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                    <line x1="57" y1="8" x2="57" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                    <line x1="71" y1="8" x2="71" y2="20" stroke="#3A63E8" stroke-width="0.8" opacity="0.6"/>
+                    <!-- Antenna -->
+                    <line x1="80" y1="8" x2="80" y2="-12" stroke="#718096" stroke-width="2"/>
+                    <circle cx="80" cy="-14" r="3" fill="#FFD23F"/>
+                    <!-- Camera eye -->
+                    <circle cx="95" cy="26" r="5" fill="#2D3748"/>
+                    <circle cx="95" cy="26" r="3" fill="#4ECDC4" opacity="0.7"/>
+                    <!-- Arm -->
+                    <line x1="50" y1="24" x2="50" y2="4" stroke="#718096" stroke-width="3"/>
+                    <rect x="42" y="0" width="16" height="6" rx="2" fill="#718096"/>
+                </g>
+
+                <!-- Astronaut (floating, animated) -->
+                <g class="astronaut-float" transform="translate(300, 200)">
+                    <!-- Helmet -->
+                    <circle cx="40" cy="22" r="24" fill="#E8EDF5" stroke="#C8D0E0" stroke-width="2"/>
+                    <!-- Visor -->
+                    <ellipse cx="40" cy="22" rx="16" ry="14" fill="#4F7CFF" opacity="0.5"/>
+                    <ellipse cx="37" cy="19" rx="5" ry="4" fill="#fff" opacity="0.4"/>
+                    <!-- Body (suit) -->
+                    <rect x="22" y="44" width="36" height="40" rx="10" fill="#E8EDF5"
+                          stroke="#C8D0E0" stroke-width="1.5"/>
+                    <!-- Backpack (life support) -->
+                    <rect x="15" y="50" width="10" height="25" rx="4" fill="#D0D9E8"
+                          stroke="#B8C2D0" stroke-width="1"/>
+                    <!-- Left arm -->
+                    <path d="M 22 55 Q 5 65 10 80" fill="none" stroke="#E8EDF5" stroke-width="12"
+                          stroke-linecap="round"/>
+                    <!-- Right arm (raised) -->
+                    <path d="M 58 55 Q 75 45 70 30" fill="none" stroke="#E8EDF5" stroke-width="12"
+                          stroke-linecap="round"/>
+                    <!-- Left leg -->
+                    <path d="M 30 84 Q 25 105 22 118" fill="none" stroke="#E8EDF5" stroke-width="11"
+                          stroke-linecap="round"/>
+                    <!-- Right leg -->
+                    <path d="M 50 84 Q 55 105 58 118" fill="none" stroke="#E8EDF5" stroke-width="11"
+                          stroke-linecap="round"/>
+                    <!-- Boots -->
+                    <ellipse cx="22" cy="120" rx="10" ry="5" fill="#D0D9E8"/>
+                    <ellipse cx="58" cy="120" rx="10" ry="5" fill="#D0D9E8"/>
+                    <!-- Chest badge -->
+                    <circle cx="40" cy="62" r="6" fill="#FF6B6B" opacity="0.7"/>
+                    <text x="40" y="66" text-anchor="middle" fill="#fff"
+                          font-size="6" font-family="sans-serif">🔬</text>
+                    <!-- Flag in right hand -->
+                    <line x1="70" y1="30" x2="70" y2="10" stroke="#A78BFA" stroke-width="2"/>
+                    <rect x="70" y="10" width="18" height="12" rx="2" fill="#FF6B6B" opacity="0.9"/>
+                    <text x="79" y="20" text-anchor="middle" fill="#fff"
+                          font-size="7" font-family="sans-serif">🌙</text>
+                </g>
+
+                <!-- Dotted orbit line for astronaut -->
+                <ellipse cx="340" cy="260" rx="110" ry="30" fill="none"
+                         stroke="rgba(167,139,250,0.25)" stroke-width="1.5"
+                         stroke-dasharray="8,5"/>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FEATURES SECTION
+═══════════════════════════════════════════ -->
+<section class="section section--white" id="features">
+    <div class="container">
+        <h2 class="section-title fade-up">What Anveshak Can Do ✨</h2>
+        <p class="section-subtitle fade-up">
+            Everything you need to plan a successful lunar mission — from rover config to landing site selection.
+        </p>
+        <div class="features-grid">
+            <div class="feature-card fade-up feature-card--blue">
+                <div class="feature-card__icon">🗺️</div>
+                <h3>Smart Landing Sites</h3>
+                <p>AI-powered scoring ranks hundreds of candidate sites by safety, sunlight, slope, and mission objectives. Find the perfect spot!</p>
+            </div>
+            <div class="feature-card fade-up feature-card--coral">
+                <div class="feature-card__icon">⚡</div>
+                <h3>Energy &amp; Path Planning</h3>
+                <p>A* pathfinder navigates real terrain. Bekker-Wong terramechanics models wheel sinkage. Solar recharge stops calculated automatically.</p>
+            </div>
+            <div class="feature-card fade-up feature-card--mint">
+                <div class="feature-card__icon">🔬</div>
+                <h3>Science Experiments</h3>
+                <p>Select from 5 experiment modes — water ice, mineralogy, thermal gradients, geomorphology, space weathering. Real NASA data layers!</p>
+            </div>
+            <div class="feature-card fade-up feature-card--purple">
+                <div class="feature-card__icon">📡</div>
+                <h3>NASA LOLA Data</h3>
+                <p>Powered by real lunar elevation data from the Lunar Orbiter Laser Altimeter. Three resolution levels up to 15 m/pixel.</p>
+            </div>
+            <div class="feature-card fade-up feature-card--yellow">
+                <div class="feature-card__icon">🛸</div>
+                <h3>6 Rover Presets</h3>
+                <p>Pragyan, VIPER, Artemis LTV, Chang'e-7, Luna-27, or design your own custom rover with precise specifications.</p>
+            </div>
+            <div class="feature-card fade-up feature-card--blue">
+                <div class="feature-card__icon">🌑</div>
+                <h3>PSR Analysis</h3>
+                <p>Permanently Shadowed Regions hold water ice! Plan rim access, full entry, or avoidance strategies for your mission type.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     HOW IT WORKS SECTION
+═══════════════════════════════════════════ -->
+<section class="section" id="how-it-works">
+    <div class="container">
+        <h2 class="section-title fade-up">How It Works 🚀</h2>
+        <p class="section-subtitle fade-up">
+            Three simple steps from rover configuration to mission-ready results.
+        </p>
+        <div class="steps-row">
+            <div class="step fade-up">
+                <div class="step__number">1</div>
+                <div class="step__icon">⚙️</div>
+                <h3>Configure Your Rover</h3>
+                <p>Choose a preset (Pragyan, VIPER…) or enter custom specs: mass, wheel size, battery, slope limits, power source.</p>
+            </div>
+            <div class="step-connector" aria-hidden="true">
+                <svg width="60" height="20" viewBox="0 0 60 20">
+                    <line x1="0" y1="10" x2="48" y2="10" stroke="#4F7CFF" stroke-width="2"
+                          stroke-dasharray="6,4" opacity="0.5"/>
+                    <polygon points="48,5 60,10 48,15" fill="#4F7CFF" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="step fade-up" style="transition-delay:0.15s">
+                <div class="step__number">2</div>
+                <div class="step__icon">🔍</div>
+                <h3>Run AI Analysis</h3>
+                <p>Anveshak scores terrain, finds optimal landing zones, plans the traverse path, and calculates energy budget in seconds.</p>
+            </div>
+            <div class="step-connector" aria-hidden="true">
+                <svg width="60" height="20" viewBox="0 0 60 20">
+                    <line x1="0" y1="10" x2="48" y2="10" stroke="#4F7CFF" stroke-width="2"
+                          stroke-dasharray="6,4" opacity="0.5"/>
+                    <polygon points="48,5 60,10 48,15" fill="#4F7CFF" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="step fade-up" style="transition-delay:0.3s">
+                <div class="step__number">3</div>
+                <div class="step__icon">🌙</div>
+                <h3>Explore Results</h3>
+                <p>Interactive terrain maps, ranked landing sites table, path statistics, mission report — ready to export as PDF.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ABOUT SECTION
+═══════════════════════════════════════════ -->
+<section class="section section--white" id="about">
+    <div class="container">
+        <div class="about-grid">
+            <div class="about-illustration fade-up" aria-hidden="true">
+                <!-- CSS moon illustration -->
+                <div class="moon-art">
+                    <div class="moon-body">
+                        <div class="moon-crater moon-crater--1"></div>
+                        <div class="moon-crater moon-crater--2"></div>
+                        <div class="moon-crater moon-crater--3"></div>
+                        <div class="moon-shine"></div>
+                    </div>
+                    <div class="moon-stars">
+                        <span style="top:10%;left:5%">✦</span>
+                        <span style="top:25%;right:8%">✦</span>
+                        <span style="top:60%;left:8%">✦</span>
+                        <span style="top:75%;right:5%">✦</span>
+                        <span style="top:45%;left:50%">✦</span>
+                    </div>
+                </div>
+            </div>
+            <div class="about-text fade-up" style="transition-delay:0.15s">
+                <span class="about-tag">🌟 About the Project</span>
+                <h2 class="about-title">Built for Lunar Explorers, by Future Engineers</h2>
+                <p>
+                    Anveshak is an open-source lunar mission planning tool developed to make
+                    space exploration accessible for students, researchers, and space agencies.
+                    Named after the Sanskrit word for "explorer", it embodies India's spirit
+                    of discovery.
+                </p>
+                <p style="margin-top:1rem">
+                    The tool integrates real NASA LOLA Digital Elevation Models,
+                    Bekker-Wong terramechanics, DBSCAN anomaly detection, and A* pathfinding
+                    into a single easy-to-use interface.
+                </p>
+                <div class="about-credits">
+                    <div class="credit-badge">🛰️ NASA LOLA DEM</div>
+                    <div class="credit-badge">🇮🇳 ISRO Chandrayaan Data</div>
+                    <div class="credit-badge">🔬 Open Science</div>
+                </div>
+                <a href="/planner" class="btn btn--primary" style="margin-top:1.5rem">
+                    Start Planning 🚀
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CONTACT SECTION
+═══════════════════════════════════════════ -->
+<section class="section" id="contact">
+    <div class="container--narrow">
+        <h2 class="section-title fade-up">Get in Touch 💌</h2>
+        <p class="section-subtitle fade-up">
+            Questions, collaborations, or just want to share your lunar mission ideas?
+        </p>
+        <div class="contact-card fade-up">
+            <form class="contact-form" id="contact-form">
+                <div class="contact-fields-grid">
+                    <div class="form-group">
+                        <label class="field-label" for="c-name">Your Name</label>
+                        <input type="text" id="c-name" name="name" class="field-input"
+                               placeholder="Aryabhata" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label" for="c-inst">Institution</label>
+                        <input type="text" id="c-inst" name="institution" class="field-input"
+                               placeholder="IIT Bombay, ISRO, NASA..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label" for="c-email">Email Address</label>
+                        <input type="email" id="c-email" name="email" class="field-input"
+                               placeholder="you@institute.edu" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label" for="c-subject">Subject</label>
+                        <input type="text" id="c-subject" name="subject" class="field-input"
+                               placeholder="Mission collaboration, bug report..." />
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:1rem">
+                    <label class="field-label" for="c-msg">Message</label>
+                    <textarea id="c-msg" name="message" class="field-input contact-textarea"
+                              rows="5" placeholder="Tell us about your lunar mission ideas! 🌙"
+                              required></textarea>
+                </div>
+                <div style="margin-top:1.25rem;text-align:center">
+                    <button type="submit" class="btn btn--primary btn--lg">
+                        Send Message 🚀
+                    </button>
+                </div>
+            </form>
+            <div id="contact-success" class="contact-success hidden">
+                <div class="contact-success__icon">🚀</div>
+                <h3>Message Sent!</h3>
+                <p>Thanks for reaching out! We'll get back to you soon.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block footer %}
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">🌙 Anveshak</div>
+                <p>
+                    India's open-source lunar mission planning tool.
+                    Built for students, researchers, and space dreamers.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="/planner">Launch Planner</a></li>
+                    <li><a href="/setup">Data Setup</a></li>
+                    <li><a href="/docs" target="_blank">API Docs</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Data Credits</h4>
+                <ul>
+                    <li><a href="https://imbrium.mit.edu/DOCUMENT/LOLARDR.pdf" target="_blank">NASA LOLA DEM</a></li>
+                    <li><a href="https://www.isro.gov.in/chandrayaan3.html" target="_blank">ISRO Chandrayaan-3</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>🌙 Anveshak v0.2.0 — Lunar South Pole Mission Planner</span>
+            <span>Data: NASA LOLA DEM · Smith et al. (2010)</span>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ── Landing Page Specific Styles ── */
+
+/* HERO */
+.hero-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F0F4FF 0%, #E8EDFF 40%, #EEF2FF 100%);
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 1.5rem 4rem;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(79,124,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    width: 100%;
+}
+
+.hero-text { animation: slide-in-left 0.8s ease both; }
+
+.hero-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(79,124,255,0.25);
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+}
+
+.hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 6vw, 4.5rem);
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 1.2rem;
+}
+
+.hero-accent {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.hero-subtext {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 460px;
+    margin-bottom: 2rem;
+}
+
+.hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.hero-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.hero-stat__num {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.hero-stat__label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.hero-illustration {
+    position: relative;
+    animation: slide-in-right 0.8s ease 0.2s both;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-svg {
+    width: 100%;
+    max-width: 500px;
+    filter: drop-shadow(0 20px 40px rgba(79,124,255,0.15));
+}
+
+.astronaut-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* FEATURES */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+}
+
+.feature-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 2rem 1.75rem;
+    box-shadow: var(--shadow-sm);
+    border-top: 4px solid transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: default;
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-card--blue   { border-top-color: var(--primary); }
+.feature-card--coral  { border-top-color: var(--coral); }
+.feature-card--mint   { border-top-color: var(--mint); }
+.feature-card--purple { border-top-color: var(--purple); }
+.feature-card--yellow { border-top-color: var(--yellow); }
+
+.feature-card__icon {
+    font-size: 2.4rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.feature-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    margin-bottom: 0.6rem;
+    color: var(--text);
+}
+
+.feature-card p {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* HOW IT WORKS */
+.steps-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.step {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    flex: 1;
+    min-width: 200px;
+    max-width: 260px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.step:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+.step__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--purple));
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(79,124,255,0.35);
+}
+
+.step__icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.step h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.step p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.step-connector {
+    display: flex;
+    align-items: center;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+/* ABOUT */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.moon-art {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    background: linear-gradient(160deg, #1E1B4B 0%, #3A4DB7 60%, #4F7CFF 100%);
+    border-radius: 50%;
+    box-shadow: 0 20px 60px rgba(30,27,75,0.3), inset 0 0 40px rgba(79,124,255,0.2);
+    overflow: visible;
+}
+
+.moon-body {
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(ellipse at 35% 35%, #E8EDF5, #B0BAC8);
+    border-radius: 50%;
+    box-shadow: inset -8px -8px 20px rgba(0,0,0,0.2), 0 0 30px rgba(232,237,245,0.3);
+}
+
+.moon-crater {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #C8D0E0, #9AABBF);
+    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+}
+.moon-crater--1 { width: 25%; height: 25%; top: 20%; left: 15%; }
+.moon-crater--2 { width: 15%; height: 15%; top: 55%; right: 20%; }
+.moon-crater--3 { width: 10%; height: 10%; top: 35%; left: 55%; }
+
+.moon-shine {
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 30%;
+    height: 20%;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    filter: blur(6px);
+    transform: rotate(-20deg);
+}
+
+.moon-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.moon-stars span {
+    position: absolute;
+    color: var(--yellow);
+    font-size: 0.9rem;
+    animation: twinkle 2s ease-in-out infinite;
+}
+
+.about-tag {
+    display: inline-block;
+    background: var(--yellow-light);
+    color: #856400;
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255,210,63,0.4);
+}
+
+.about-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.about-text p { color: var(--text-muted); line-height: 1.75; }
+
+.about-credits {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+}
+
+.credit-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(79,124,255,0.25);
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* CONTACT */
+.contact-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 2.5rem 2rem;
+}
+
+.contact-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.contact-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.contact-success {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+.contact-success__icon { font-size: 4rem; margin-bottom: 1rem; }
+.contact-success h3 {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+.contact-success p { color: var(--text-muted); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-illustration { order: -1; }
+    .hero-svg { max-width: 320px; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .about-grid { grid-template-columns: 1fr; }
+    .moon-art { max-width: 240px; }
+}
+
+@media (max-width: 600px) {
+    .hero-section { padding: 5rem 1rem 3rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .contact-fields-grid { grid-template-columns: 1fr; }
+    .steps-row { flex-direction: column; }
+    .step-connector { transform: rotate(90deg); }
+    .hero-stats { gap: 1.5rem; }
+}
+</style>
+
+<script>
+// Navbar scroll glass effect
+window.addEventListener('scroll', () => {
+    document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+// Section entrance animations via IntersectionObserver
+const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+
+// Contact form intercept — no backend needed
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    this.classList.add('hidden');
+    document.getElementById('contact-success').classList.remove('hidden');
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+</script>
+{% endblock %}

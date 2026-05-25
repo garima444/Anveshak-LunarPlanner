@@ -1,0 +1,160 @@
+{
+  "test_name": "Input Combination Coverage (Fast)",
+  "result": "FAIL",
+  "n_combos_pass": 0,
+  "n_combos_warn": 0,
+  "invalid_combo_result": "WARN",
+  "pathfinding_result": "WARN",
+  "sub_results": {
+    "c1_water_ice_rtg_enter": {
+      "label": "C1",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>"
+    },
+    "c2_water_ice_rtg_rim": {
+      "label": "C2",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c3_water_ice_solar_rim": {
+      "label": "C3",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c4_water_ice_solar_avoid": {
+      "label": "C4",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c5_geological_rtg_rim": {
+      "label": "C5",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c6_geological_solar_avoid": {
+      "label": "C6",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c7_atmospheric_rtg_avoid": {
+      "label": "C7",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "c8_atmospheric_solar_avoid": {
+      "label": "C8",
+      "result": "FAIL",
+      "checks": [
+        {
+          "check": "score_terrain_no_exception",
+          "result": "FAIL",
+          "value": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+          "expected": "no exception"
+        }
+      ],
+      "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+    },
+    "x_invalid": {
+      "label": "X",
+      "description": "INVALID: water_ice + solar + enter",
+      "result": "WARN",
+      "checks": [
+        {
+          "check": "invalid_combo_no_crash",
+          "result": "PASS",
+          "value": "no exception raised (0.84s)",
+          "expected": "scorer must not crash on any input"
+        },
+        {
+          "check": "solar_enter_psr_enforcement_note",
+          "result": "WARN",
+          "value": "Scorer ran without error on synthetic terrain (no PSR map loaded)",
+          "expected": "On real DEM with PSR map: final[psr_mask>=0.5]=0 enforces the constraint. Application layer (main.py) rejects this combo before calling scorer."
+        }
+      ]
+    },
+    "pathfinding_smoke": {
+      "description": "A* smoke test on C1 (water_ice/rtg/enter)",
+      "result": "WARN",
+      "checks": [
+        {
+          "check": "path_found",
+          "result": "WARN",
+          "value": "None (terrain separation or all routes blocked)",
+          "expected": "path returned"
+        }
+      ]
+    }
+  },
+  "failures": [
+    "C1 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>",
+    "C2 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C3 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C4 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C5 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C6 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C7 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>",
+    "C8 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+  ],
+  "warnings": [
+    "Invalid combo (solar+enter) ran without error on synthetic terrain \u2014 expected, PSR enforcement requires real PSR map.",
+    "Pathfinder returned None on C1 (terrain separation on synthetic terrain)"
+  ],
+  "notes": "0/8 combos PASS  |  invalid=WARN  |  path=WARN  |  [warnings: Invalid combo (solar+enter) ran without error on synthetic terrain \u2014 expected, PSR enforcement requires real PSR map.; Pathfinder returned None on C1 (terrain separation on synthetic terrain)]  |  [FAIL: C1 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>; C2 score_terrain: 'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>]"
+}

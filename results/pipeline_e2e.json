@@ -1,0 +1,41 @@
+{
+  "test_name": "End-to-End Pipeline Smoke Test",
+  "checks": {
+    "terrain_shape": [
+      300,
+      300
+    ],
+    "score_terrain_time_s": 12.522,
+    "safety_range": [
+      0.0,
+      0.8906
+    ],
+    "mission_range": [
+      0.2477,
+      0.9997
+    ],
+    "final_range": [
+      0.0,
+      0.7292
+    ],
+    "final_score_std": 0.09,
+    "impassable_safety_zero": true,
+    "top_sites_above_mean": true,
+    "n_top_sites": 7,
+    "stage1": "PASS",
+    "stage2": "PASS",
+    "find_path_time_s": 0.232,
+    "path_length": 56,
+    "path_distance_m": 3623.09,
+    "battery_feasible": true,
+    "battery_pct": 69.6,
+    "stage3": "PASS",
+    "detect_anomalies_time_s": 1.465,
+    "n_anomalies": 19,
+    "stage4": "PASS"
+  },
+  "warnings": [],
+  "failures": [],
+  "result": "PASS",
+  "notes": "Stages: S1=PASS, S2=PASS, S3=PASS, S4=PASS"
+}

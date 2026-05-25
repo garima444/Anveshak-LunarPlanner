@@ -1,0 +1,60 @@
+{
+  "test_name": "Section 8: Known Limitations",
+  "result": "WARN",
+  "notes": "9 limitations documented and verified",
+  "passed": 9,
+  "total": 9,
+  "limitations": [
+    [
+      "DEM coverage: 80\u201390\u00b0S only",
+      "Documented \u2705",
+      "Chandrayaan-3 at 69.4\u00b0S \u2014 outside coverage"
+    ],
+    [
+      "Chandrayaan-3 at 69.4\u00b0S",
+      "Documented \u2705",
+      "Outside 75-90\u00b0S DEM coverage"
+    ],
+    [
+      "Solar temporal planning",
+      "Level 2 model \u2705",
+      "Hourly illumination windows not modeled"
+    ],
+    [
+      "Nobile PSR resolution",
+      "Documented \u2705",
+      "< 30m needed; working res = 60m"
+    ],
+    [
+      "Wheel sinkage (flag only)",
+      "Documented \u2705",
+      "DEM cannot determine soil strength"
+    ],
+    [
+      "60m spatial resolution",
+      "Documented \u2705",
+      "Sub-pixel hazards not resolvable"
+    ],
+    [
+      "Classifier pkl file",
+      "\u2705 ON DISK",
+      "Trained"
+    ],
+    [
+      "Ancillary layer files",
+      "4/4 on disk \u2705",
+      "Proxy scoring used when ancillaries absent"
+    ],
+    [
+      "RAM for real DEM",
+      "~0.4GB (3 arrays)",
+      "8+ GB recommended"
+    ]
+  ],
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\08_limitations_terminal.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\08_limitations_summary.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\08_limitations_check.txt",
+  "_elapsed_s": 2.0
+}

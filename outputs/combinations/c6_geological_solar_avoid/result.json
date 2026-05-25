@@ -1,0 +1,137 @@
+{
+  "combination": "c6_geological_solar_avoid",
+  "label": "C6",
+  "rover_name": "Yutu-2-Clone",
+  "mission_type": "geological",
+  "power_source": "solar",
+  "psr_intent": "avoid",
+  "preset": "yutu2",
+  "analogue": "Chang'e-4 type geology mission",
+  "safety_at_top1": 0.8601,
+  "top_sites": [
+    {
+      "rank": 1,
+      "pixel_row": 1012,
+      "pixel_col": 6131,
+      "lon": 14.716429323551214,
+      "lat": -81.72048322328843,
+      "elevation_m": 2704.0,
+      "slope_deg": 1.2853978872299194,
+      "roughness_m": 0.0,
+      "safety_score": 0.8601062297821045,
+      "mission_score": 0.7644125819206238,
+      "final_score": 0.8026900887489319,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.86) ideal for safe touchdown at -81.72\u00b0S, 14.72\u00b0E."
+    },
+    {
+      "rank": 2,
+      "pixel_row": 1000,
+      "pixel_col": 6217,
+      "lon": 15.802924201129544,
+      "lat": -81.65314224354417,
+      "elevation_m": 2651.5,
+      "slope_deg": 0.5338065028190613,
+      "roughness_m": 0.0,
+      "safety_score": 0.8578319549560547,
+      "mission_score": 0.7502340078353882,
+      "final_score": 0.7932732105255127,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.86) ideal for safe touchdown at -81.65\u00b0S, 15.80\u00b0E."
+    },
+    {
+      "rank": 3,
+      "pixel_row": 998,
+      "pixel_col": 6459,
+      "lon": 18.89985583418337,
+      "lat": -81.5072970281647,
+      "elevation_m": 2486.5,
+      "slope_deg": 1.1934894323349,
+      "roughness_m": 0.0,
+      "safety_score": 0.8512091040611267,
+      "mission_score": 0.7544605731964111,
+      "final_score": 0.7931599617004395,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -81.51\u00b0S, 18.90\u00b0E."
+    },
+    {
+      "rank": 4,
+      "pixel_row": 1244,
+      "pixel_col": 6090,
+      "lon": 14.995620286486181,
+      "lat": -82.18270367286316,
+      "elevation_m": 2632.5,
+      "slope_deg": 0.5338065028190613,
+      "roughness_m": 0.0,
+      "safety_score": 0.8578736782073975,
+      "mission_score": 0.7448519468307495,
+      "final_score": 0.7900606393814087,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.86) ideal for safe touchdown at -82.18\u00b0S, 15.00\u00b0E."
+    },
+    {
+      "rank": 5,
+      "pixel_row": 917,
+      "pixel_col": 6256,
+      "lon": 16.001007216953337,
+      "lat": -81.4750222224955,
+      "elevation_m": 2504.0,
+      "slope_deg": 0.4774538278579712,
+      "roughness_m": 0.0,
+      "safety_score": 0.8507910370826721,
+      "mission_score": 0.7413254976272583,
+      "final_score": 0.7851117253303528,
+      "reasoning": "Exceptionally flat, low-roughness terrain (safety=0.85) ideal for safe touchdown at -81.48\u00b0S, 16.00\u00b0E."
+    }
+  ],
+  "path_stats": {
+    "total_distance_m": 5706.761902332481,
+    "total_distance_km": 5.706761902332482,
+    "max_slope_deg": 12.6255464553833,
+    "mean_slope_deg": 2.8377494448902962,
+    "estimated_time_hrs": 28.533809511662408,
+    "waypoint_count": 87,
+    "total_energy_wh": 2993.7398,
+    "uphill_energy_wh": 1356.7791,
+    "downhill_regen_wh": 24.5826,
+    "energy_per_km": 524.5952,
+    "battery_pct_used": 5757.1919,
+    "energy_risk": "HIGH",
+    "battery_feasible": false
+  },
+  "checks": [
+    {
+      "check": "top_sites_exist",
+      "result": "PASS",
+      "value": "10 sites, top_score=0.8027",
+      "expected": ">= 1 site with final_score > 0"
+    },
+    {
+      "check": "top3_mission_score_geological",
+      "result": "PASS",
+      "value": "mean_mission_score=0.7564",
+      "expected": "> 0.60 (geological scorer assigned high diversity value to selected sites)"
+    },
+    {
+      "check": "top3_illumination_solar_geo",
+      "result": "PASS",
+      "value": "mean_illum=0.5498",
+      "expected": "> 0.35 (solar: needs illumination for power)"
+    }
+  ],
+  "n_checks_pass": 3,
+  "n_checks_total": 3,
+  "rover_profile": {
+    "max_slope_deg": 20.0,
+    "min_flat_radius_m": 250.0,
+    "wheel_radius_m": 0.15,
+    "rover_mass_kg": 140.0,
+    "wheel_width_m": 0.12,
+    "n_wheels": 6,
+    "speed_kmh": 0.2,
+    "battery_wh": 52.0,
+    "slope_penalty_factor": 15.0,
+    "mission_type": "geological",
+    "power_source": "solar",
+    "psr_intent": "avoid",
+    "priority": 0.7,
+    "solar_panel_w": 50.0,
+    "mission_day": 7.4
+  }
+}

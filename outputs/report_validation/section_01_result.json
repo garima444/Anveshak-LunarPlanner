@@ -1,0 +1,171 @@
+{
+  "test_name": "Section 1: Module Verification",
+  "result": "PASS",
+  "notes": "26/26 checks passed",
+  "passed": 26,
+  "total": 26,
+  "checks": [
+    {
+      "check": "import core.terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.landing_scorer",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.pathfinder",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.energy_model",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.terrain_classifier",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.anomaly_detector",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.mission_advisor",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "import core.visualizer",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain.load_terrain_by_region",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain.latlon_to_pixel",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain.pixel_to_latlon",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.landing_scorer.score_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.landing_scorer.build_science_map",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.pathfinder.find_path",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.pathfinder.build_cost_grid",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.pathfinder.astar",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.energy_model.compute_path_energy",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.energy_model.estimate_sunlight",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain_classifier.classify_terrain",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain_classifier.load_classifier",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.terrain_classifier.train_classifier",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.anomaly_detector.detect_anomalies",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.mission_advisor.generate_report",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.visualizer.create_mission_map",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "core.visualizer.create_score_chart",
+      "result": "PASS",
+      "value": "",
+      "expected": ""
+    },
+    {
+      "check": "synthetic pipeline",
+      "result": "PASS",
+      "value": "0.9s",
+      "expected": "< 120s"
+    }
+  ],
+  "images": [
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\01_module_verification_table.png",
+    "Z:\\Anveshak\\outputs\\report_validation\\images\\01_checks_table.png"
+  ],
+  "log": "Z:\\Anveshak\\outputs\\report_validation\\logs\\01_module_verification.txt",
+  "_elapsed_s": 56.94
+}

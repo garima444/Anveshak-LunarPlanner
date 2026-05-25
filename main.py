@@ -17,6 +17,17 @@ Key design decisions
 
 from __future__ import annotations
 
+# ── Windows encoding fix ─────────────────────────────────────────────────────
+# Reconfigure stdout/stderr to UTF-8 so Unicode chars in core print() calls
+# (arrows, degree signs, Greek letters) don't raise UnicodeEncodeError on
+# Windows cp1252 terminals / uvicorn captured output.
+import sys as _sys
+if hasattr(_sys.stdout, "reconfigure"):
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(_sys.stderr, "reconfigure"):
+    _sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+# ─────────────────────────────────────────────────────────────────────────────
+
 import asyncio
 import json
 import shutil
@@ -25,7 +36,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, Depends
+import hashlib
+import sqlite3
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -34,7 +48,7 @@ from fastapi.templating import Jinja2Templates
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from pydantic import BaseModel, Field, validator
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 
 from config import Config
 from core.terrain import (
@@ -92,6 +106,67 @@ def _session_dir(session_id: str) -> Path:
 
 
 # ---------------------------------------------------------------------------
+# Auth — sqlite3 + hashlib.sha256 (no external deps, B-tech level logic)
+# ---------------------------------------------------------------------------
+
+_DB_PATH = Path(__file__).parent / "users.db"
+
+
+def _init_db() -> None:
+    """Create the users table if it does not exist."""
+    with sqlite3.connect(_DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                institute     TEXT    NOT NULL,
+                email         TEXT    UNIQUE NOT NULL,
+                password_hash TEXT    NOT NULL,
+                created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+
+def _hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
+def _register_user(institute: str, email: str, password: str) -> bool:
+    """Insert a new user. Returns False if email already exists."""
+    _init_db()   # ensure table exists even if db was deleted at runtime
+    try:
+        with sqlite3.connect(_DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO users (institute, email, password_hash) VALUES (?,?,?)",
+                (institute, email, _hash_password(password)),
+            )
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+
+def _verify_login(email: str, password: str) -> Optional[dict]:
+    """Return user dict on success, None on wrong credentials."""
+    with sqlite3.connect(_DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT id, institute, email FROM users WHERE email=? AND password_hash=?",
+            (email, _hash_password(password)),
+        ).fetchone()
+    return {"id": row[0], "institute": row[1], "email": row[2]} if row else None
+
+
+def _get_current_user(request: Request) -> Optional[dict]:
+    """Extract authenticated user from the signed 'anveshak_user' cookie."""
+    cookie = request.cookies.get("anveshak_user")
+    if not cookie:
+        return None
+    try:
+        data = _serializer.loads(cookie, max_age=_SESSION_MAX_AGE)
+        return data if isinstance(data, dict) and "id" in data else None
+    except (BadSignature, SignatureExpired):
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Terrain cache:  region_key -> (elevation, slope, roughness, profile)
 # ---------------------------------------------------------------------------
 
@@ -143,6 +218,8 @@ async def _ensure_terrain_loaded(region_key: str) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _init_db()   # ensure users table exists on every startup
+
     async def _preload():
         try:
             await _ensure_terrain_loaded(_DEFAULT_REGION)
@@ -767,14 +844,108 @@ async def _run_analysis(rover: RoverProfile) -> dict:
 # ---------------------------------------------------------------------------
 
 @app.get("/", include_in_schema=False)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def landing(request: Request):
+    """Landing page with features, about, and contact sections."""
+    user = _get_current_user(request)
+    return templates.TemplateResponse(
+        request, "landing.html", {"user": user, "navbar_mode": "landing"}
+    )
+
+
+@app.get("/planner", include_in_schema=False)
+async def planner(request: Request):
+    """Mission planner app — main analysis tool."""
+    user = _get_current_user(request)
+    return templates.TemplateResponse(
+        request, "app.html", {"user": user, "navbar_mode": "app"}
+    )
+
+
+@app.get("/login", include_in_schema=False)
+async def login_page(request: Request):
+    user = _get_current_user(request)
+    if user:
+        return RedirectResponse("/planner", status_code=302)
+    return templates.TemplateResponse(
+        request, "login.html", {"navbar_mode": "auth", "error": None}
+    )
+
+
+@app.get("/signup", include_in_schema=False)
+async def signup_page(request: Request):
+    user = _get_current_user(request)
+    if user:
+        return RedirectResponse("/planner", status_code=302)
+    return templates.TemplateResponse(
+        request, "signup.html", {"navbar_mode": "auth", "error": None}
+    )
+
+
+@app.get("/logout", include_in_schema=False)
+async def logout():
+    resp = RedirectResponse("/", status_code=302)
+    resp.delete_cookie("anveshak_user")
+    return resp
+
+
+@app.post("/auth/signup", include_in_schema=False)
+async def auth_signup(
+    request: Request,
+    institute: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+):
+    if len(password) < 6:
+        return templates.TemplateResponse(
+            request, "signup.html",
+            {"navbar_mode": "auth",
+             "error": "Password must be at least 6 characters."},
+            status_code=400,
+        )
+    success = _register_user(institute.strip(), email.strip().lower(), password)
+    if not success:
+        return templates.TemplateResponse(
+            request, "signup.html",
+            {"navbar_mode": "auth",
+             "error": "An account with this email already exists."},
+            status_code=400,
+        )
+    user = _verify_login(email.strip().lower(), password)
+    signed = _serializer.dumps(user)
+    resp = RedirectResponse("/planner", status_code=303)
+    resp.set_cookie("anveshak_user", signed, httponly=True,
+                    max_age=_SESSION_MAX_AGE, samesite="lax")
+    return resp
+
+
+@app.post("/auth/login", include_in_schema=False)
+async def auth_login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+):
+    user = _verify_login(email.strip().lower(), password)
+    if not user:
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"navbar_mode": "auth",
+             "error": "Invalid email or password. Please try again."},
+            status_code=401,
+        )
+    signed = _serializer.dumps(user)
+    resp = RedirectResponse("/planner", status_code=303)
+    resp.set_cookie("anveshak_user", signed, httponly=True,
+                    max_age=_SESSION_MAX_AGE, samesite="lax")
+    return resp
 
 
 @app.get("/setup", include_in_schema=False)
 async def setup(request: Request):
     """Data source configuration page — choose DEM region and upload ancillary files."""
-    return templates.TemplateResponse("setup.html", {"request": request})
+    user = _get_current_user(request)
+    return templates.TemplateResponse(
+        request, "setup.html", {"user": user}
+    )
 
 
 @app.get("/health")

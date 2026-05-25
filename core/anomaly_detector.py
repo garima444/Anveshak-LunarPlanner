@@ -29,14 +29,18 @@ import pyproj
 
 # ---------------------------------------------------------------------------
 # Constants
+# RAM: ~300 MB peak on 4 GB machines (downsampled to _MAX_SIDE=2500 before feature planes)
 # ---------------------------------------------------------------------------
 
 WINDOW_LOCAL    = 25      # pixels, uniform_filter for local elevation stats
 WINDOW_CONTRAST = 5       # pixels, max/min filter for local_contrast
-N_SUBSAMPLE     = 100_000 # random pixel samples for DBSCAN
-MIN_CLUSTER_PX  = 10      # minimum cluster size (sampled pixels)
-DBSCAN_EPS      = 0.5
-DBSCAN_MIN_SAMPLES = 50
+N_SUBSAMPLE     = 20_000  # random pixel samples for DBSCAN (keep low — DBSCAN memory ∝ n²)
+MIN_CLUSTER_PX  = 5       # minimum cluster size (sampled pixels)
+# eps=0.18: k-distance elbow on 20k samples from the LOLA 80–90°S DEM (test_dbscan_params.py).
+# The elbow method found the natural density boundary at 0.1841, yielding ~7 distinct
+# geological clusters. The previous value (0.5) merged all terrain into 1 cluster.
+DBSCAN_EPS      = 0.18
+DBSCAN_MIN_SAMPLES = 10
 
 _RECOMMENDED_FOR: dict[str, list[str]] = {
     "THERMAL_PROXY":     ["water_ice", "geological"],
@@ -302,21 +306,41 @@ def detect_anomalies(
     H, W = elevation.shape
     print(f"[anomaly] Computing feature planes for {H}×{W} terrain …")
 
-    # ---- 1. Feature planes ----
-    planes = _compute_feature_planes(elevation, slope, roughness)
+    # ---- 0. Downsample large terrains to stay within memory limits ----
+    # Each float32 array at full resolution = H*W*4 bytes.
+    # _compute_feature_planes creates ~12 intermediate arrays, so we cap the
+    # working resolution to keep peak memory well under 4 GB.
+    _MAX_SIDE = 2500  # target max dimension for anomaly computation
+    ds_stride = max(1, max(H, W) // _MAX_SIDE)
+    if ds_stride > 1:
+        elev_in = elevation[::ds_stride, ::ds_stride]
+        slope_in = slope[::ds_stride, ::ds_stride]
+        rough_in = roughness[::ds_stride, ::ds_stride]
+        print(f"[anomaly] Downsampled {H}×{W} → {elev_in.shape[0]}×{elev_in.shape[1]} "
+              f"(stride={ds_stride}) to reduce memory usage.")
+    else:
+        elev_in, slope_in, rough_in = elevation, slope, roughness
+        ds_stride = 1
 
-    # ---- 2. Subsample random pixels ----
+    # ---- 1. Feature planes (on possibly-downsampled arrays) ----
+    planes = _compute_feature_planes(elev_in, slope_in, rough_in)
+
+    # ---- 2. Subsample random pixels (from the downsampled grid) ----
     rng     = np.random.default_rng(42)
-    n_total = H * W
+    H_ds, W_ds = planes[0].shape
+    n_total = H_ds * W_ds
     n_samp  = min(N_SUBSAMPLE, n_total)
     idx     = rng.choice(n_total, size=n_samp, replace=False)
 
-    # row / col coords for each sampled index
-    rows = (idx // W).astype(np.int32)
-    cols = (idx  % W).astype(np.int32)
+    # row / col coords for each sampled index (in downsampled pixel space)
+    rows = (idx // W_ds).astype(np.int32)
+    cols = (idx  % W_ds).astype(np.int32)
 
-    # ---- 3. Gather feature values ----
+    # ---- 3. Gather feature values (then free planes immediately) ----
     X_raw = np.stack([p.reshape(-1)[idx] for p in planes], axis=-1).astype(np.float32)
+    del planes
+    if ds_stride > 1:
+        del elev_in, slope_in, rough_in
 
     # ---- 4. Replace NaN/inf ----
     X_raw = np.where(np.isfinite(X_raw), X_raw, np.float32(0.0))
@@ -326,7 +350,12 @@ def detect_anomalies(
 
     # ---- 6. DBSCAN ----
     print(f"[anomaly] Running DBSCAN on {n_samp:,} samples …")
-    labels = DBSCAN(eps=DBSCAN_EPS, min_samples=DBSCAN_MIN_SAMPLES).fit_predict(X_scaled)
+    labels = DBSCAN(
+        eps=DBSCAN_EPS,
+        min_samples=DBSCAN_MIN_SAMPLES,
+        algorithm="ball_tree",
+        n_jobs=1,
+    ).fit_predict(X_scaled)
 
     unique_labels = set(labels)
     unique_labels.discard(-1)   # noise
@@ -344,8 +373,9 @@ def detect_anomalies(
         cluster_rows = rows[mask]
         cluster_cols = cols[mask]
 
-        centroid_row = int(round(float(cluster_rows.mean())))
-        centroid_col = int(round(float(cluster_cols.mean())))
+        # Centroid in downsampled space → scale back to full-resolution pixels
+        centroid_row = int(round(float(cluster_rows.mean()))) * ds_stride
+        centroid_col = int(round(float(cluster_cols.mean()))) * ds_stride
 
         # Clamp to valid range
         centroid_row = max(0, min(centroid_row, H - 1))

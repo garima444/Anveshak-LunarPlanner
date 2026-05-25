@@ -1,0 +1,131 @@
+{
+  "combination": "c3_water_ice_solar_rim",
+  "label": "C3",
+  "rover_name": "Solar-Scout",
+  "mission_type": "water_ice",
+  "power_source": "solar",
+  "psr_intent": "rim",
+  "preset": "viper",
+  "analogue": "Solar PSR-rim rover",
+  "safety_at_top1": 0.7942,
+  "top_sites": [
+    {
+      "rank": 1,
+      "pixel_row": 5166,
+      "pixel_col": 5021,
+      "lon": -155.65701955024147,
+      "lat": -89.78318677021363,
+      "elevation_m": 1735.5,
+      "slope_deg": 0.5338065028190613,
+      "roughness_m": 1.8027756214141846,
+      "safety_score": 0.7941678166389465,
+      "mission_score": 1.0,
+      "final_score": 0.9176671504974365,
+      "reasoning": "Near-polar location (-89.78\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=1.00)."
+    },
+    {
+      "rank": 2,
+      "pixel_row": 5259,
+      "pixel_col": 4895,
+      "lon": -138.4064437549947,
+      "lat": -89.48981745837385,
+      "elevation_m": 1928.5,
+      "slope_deg": 0.7161599397659302,
+      "roughness_m": 0.7071067690849304,
+      "safety_score": 0.8245135545730591,
+      "mission_score": 0.9642977714538574,
+      "final_score": 0.9083841443061829,
+      "reasoning": "Near-polar location (-89.49\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.96)."
+    },
+    {
+      "rank": 3,
+      "pixel_row": 5217,
+      "pixel_col": 5019,
+      "lon": -162.6351614388253,
+      "lat": -89.68729911003663,
+      "elevation_m": 1729.5,
+      "slope_deg": 0.8606972694396973,
+      "roughness_m": 3.535533905029297,
+      "safety_score": 0.748421311378479,
+      "mission_score": 1.0,
+      "final_score": 0.8993685245513916,
+      "reasoning": "Near-polar location (-89.69\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=1.00)."
+    },
+    {
+      "rank": 4,
+      "pixel_row": 5107,
+      "pixel_col": 4567,
+      "lon": -94.67655407302735,
+      "lat": -89.00903785084759,
+      "elevation_m": 1553.5,
+      "slope_deg": 0.7161599397659302,
+      "roughness_m": 1.1180340051651,
+      "safety_score": 0.811530590057373,
+      "mission_score": 0.9481239318847656,
+      "final_score": 0.8934866189956665,
+      "reasoning": "Near-polar location (-89.01\u00b0S) maximises access to permanently shadowed regions for ice prospecting (mission=0.95)."
+    },
+    {
+      "rank": 5,
+      "pixel_row": 4771,
+      "pixel_col": 4341,
+      "lon": -67.8520613845929,
+      "lat": -88.45091829766854,
+      "elevation_m": 1579.5,
+      "slope_deg": 0.7548945546150208,
+      "roughness_m": 1.0,
+      "safety_score": 0.8147104978561401,
+      "mission_score": 0.9407208561897278,
+      "final_score": 0.8903167247772217,
+      "reasoning": "Balanced safety (0.81) and science (0.94) score at -88.45\u00b0S, -67.85\u00b0E."
+    }
+  ],
+  "path_stats": {
+    "total_distance_m": 9055.432893255058,
+    "total_distance_km": 9.055432893255057,
+    "max_slope_deg": 10.349406242370605,
+    "mean_slope_deg": 4.2021911673545835,
+    "estimated_time_hrs": 15.092388155425096,
+    "waypoint_count": 125,
+    "total_energy_wh": 1523.5705,
+    "uphill_energy_wh": 321.2312,
+    "downhill_regen_wh": 28.9096,
+    "energy_per_km": 168.2493,
+    "battery_pct_used": 338.5712,
+    "energy_risk": "HIGH",
+    "battery_feasible": false
+  },
+  "checks": [
+    {
+      "check": "top_sites_exist",
+      "result": "PASS",
+      "value": "10 sites, top_score=0.9177",
+      "expected": ">= 1 site with final_score > 0"
+    },
+    {
+      "check": "solar_no_sites_in_psr",
+      "result": "PASS",
+      "value": "0 top-10 sites inside PSR",
+      "expected": "0 (solar hard-zero: cannot land in PSR)"
+    }
+  ],
+  "n_checks_pass": 2,
+  "n_checks_total": 2,
+  "rover_profile": {
+    "max_slope_deg": 20.0,
+    "min_flat_radius_m": 300.0,
+    "wheel_radius_m": 0.25,
+    "rover_mass_kg": 430.0,
+    "wheel_width_m": 0.2,
+    "n_wheels": 6,
+    "speed_kmh": 0.6,
+    "battery_wh": 450.0,
+    "slope_penalty_factor": 15.0,
+    "mission_type": "water_ice",
+    "power_source": "solar",
+    "psr_intent": "rim",
+    "priority": 0.5,
+    "solar_panel_w": 50.0,
+    "mission_day": 7.4
+  }
+}
